@@ -1,14 +1,6 @@
-#include <iostream>
-#include <sstream>
-#include <map>
+#include <cmath>
+#include <string>
 #include <unordered_map>
-#include <vector>
-#include <set>
-#include <list>
-#include <algorithm>
-#include <map>
-#include <cassert>
-#include <chrono>
 
 #include "../aoc.hpp"
 
@@ -34,7 +26,7 @@ int baby_giant(int a) {
     int z = 20201227;
     int n = z-1;
     int m = std::ceil(std::sqrt(n));
-    
+
     std::unordered_map<int, int> is;
 
     int r = 1;
@@ -67,7 +59,7 @@ answer solve_day25(input& in) {
 
     int pub_key1 = std::stoi(in[0]);
     int pub_key2 = std::stoi(in[1]);
-    
+
     int key_ls = baby_giant(pub_key1);
 
     a.part1 = std::to_string(bin_exp_mod(pub_key2, key_ls, 20201227));
