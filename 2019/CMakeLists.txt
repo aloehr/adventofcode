@@ -1,21 +1,21 @@
 project(aoc2020)
 
 set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -O2")
+set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -O3")
 
 add_executable(
-    aoc 
-    main.cpp 
-    solutions/day01.cpp 
-    solutions/day02.cpp 
-    solutions/day03.cpp 
-    solutions/day04.cpp 
-    solutions/day05.cpp 
-    solutions/day06.cpp 
+    aoc
+    main.cpp
+    solutions/day01.cpp
+    solutions/day02.cpp
+    solutions/day03.cpp
+    solutions/day04.cpp
+    solutions/day05.cpp
+    solutions/day06.cpp
     solutions/day07.cpp
     solutions/day08.cpp
     solutions/day09.cpp
-    #solutions/day10.cpp
+    solutions/day10.cpp
     #solutions/day11.cpp
     #solutions/day12.cpp
     #solutions/day13.cpp

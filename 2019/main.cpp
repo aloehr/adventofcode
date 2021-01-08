@@ -62,39 +62,37 @@ void print_results(const std::vector<result>& results) {
     std::string sep_line(12 + p1_ans_max_length + 2 + p2_ans_max_length + 15, '-');
 
     // header
-    printf("%s\n", sep_line.c_str()); 
+    printf("%s\n", sep_line.c_str());
     printf("| Day | %*s | %*s | %13s |\n", (int) p1_ans_max_length, p1.c_str(), (int) p2_ans_max_length, p2.c_str(), "Time");
-    printf("%s\n", sep_line.c_str()); 
+    printf("%s\n", sep_line.c_str());
 
-    // content 
+    // content
     for (const auto& r : results) {
         printf(
-            "|  %.2d | %*s | %*s | %10.3f ms |\n", 
-            r.day, 
-            (int) p1_ans_max_length, 
-            r.ans.part1.c_str(), 
-            (int) p2_ans_max_length, 
-            r.ans.part2.c_str(), 
+            "|  %.2d | %*s | %*s | %10.3f ms |\n",
+            r.day,
+            (int) p1_ans_max_length,
+            r.ans.part1.c_str(),
+            (int) p2_ans_max_length,
+            r.ans.part2.c_str(),
             1e-6 * r.dur.count()
         );
     }
 
     // total time
-    printf("%s\n", sep_line.c_str()); 
+    printf("%s\n", sep_line.c_str());
     printf("| %*.3f ms |\n", (int) (sep_line.size() - 7), 1e-6 *  total_time.count());
-    printf("%s\n", sep_line.c_str()); 
-
-    
+    printf("%s\n", sep_line.c_str());
 }
 
 int main(int argc, char *args[]) {
 
-    size_t single_run_day = 0; 
+    size_t single_run_day = 0;
     std::vector<result> results;
 
     std::vector<solve_fnc> solutions = {
         solve_day01, solve_day02, solve_day03, solve_day04, solve_day05,
-        solve_day06, solve_day07, solve_day08, solve_day09, //solve_day10,
+        solve_day06, solve_day07, solve_day08, solve_day09, solve_day10,
         //solve_day11, solve_day12, solve_day13, solve_day14, solve_day15,
         //solve_day16, solve_day17, solve_day18, solve_day19, solve_day20,
         //solve_day21, solve_day22, solve_day23, solve_day24, solve_day25,
@@ -111,7 +109,7 @@ int main(int argc, char *args[]) {
     for (size_t i = 0; i < solutions.size(); ++i) {
         if (single_run_day && i != single_run_day-1) continue;
 
-        std::string input_file = "../data/day" + num2str(i+1) + ".txt"; 
+        std::string input_file = "../data/day" + num2str(i+1) + ".txt";
         input in = read_file(input_file);
 
         result r;
@@ -121,7 +119,7 @@ int main(int argc, char *args[]) {
         r.ans = solutions[i](in);
         auto end = std::chrono::high_resolution_clock::now();
 
-        r.dur = end - start; 
+        r.dur = end - start;
 
         results.push_back(r);
     }
