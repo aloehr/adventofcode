@@ -6,6 +6,7 @@ set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -g -O3")
 add_executable(
     aoc
     main.cpp
+    solutions/IntCodeVM.cpp
     solutions/day01.cpp
     solutions/day02.cpp
     solutions/day03.cpp

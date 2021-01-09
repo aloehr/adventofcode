@@ -1,5 +1,3 @@
-#include <algorithm>
-#include <iostream>
 #include <string>
 #include <vector>
 
@@ -10,29 +8,16 @@ using memory = std::vector<int>;
 
 int execute(memory mem) {
     size_t instr_ptr = 0;
-    int reg1 = 0;
-    int reg2 = 0;
 
     while (mem[instr_ptr] != 99) {
-        switch (mem[instr_ptr]) {
-            case 1: 
-                // add
-                reg1 = mem[mem[instr_ptr+1]];
-                reg2 = mem[mem[instr_ptr+2]];
-                mem[mem[instr_ptr+3]] = reg1 + reg2;
-                break;
-            case 2:
-                // multiply
-                reg1 = mem[mem[instr_ptr+1]];
-                reg2 = mem[mem[instr_ptr+2]];
-                mem[mem[instr_ptr+3]] = reg1 * reg2;
-                break;
-            default:
-                std::cout << "Error: unknown opcode '" << mem[instr_ptr] << "'" << std::endl;
-                return 1;
-                break;
+        if (mem[instr_ptr] == 1) {
+            // add
+            mem[mem[instr_ptr+3]] = mem[mem[instr_ptr+1]] + mem[mem[instr_ptr+2]];
         }
-
+        else {
+            // multiply
+            mem[mem[instr_ptr+3]] = mem[mem[instr_ptr+1]] * mem[mem[instr_ptr+2]];
+        }
         instr_ptr += 4;
     }
 
@@ -75,11 +60,11 @@ answer solve_day02(input& in) {
             int res = execute(mem);
 
             if (res == 19690720) {
-                a.part2 = std::to_string((noun * 100 + verb)); 
+                a.part2 = std::to_string((noun * 100 + verb));
                 found = true;
             }
         }
-    }   
+    }
 
     return a;
 }
