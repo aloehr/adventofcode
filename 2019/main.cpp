@@ -32,17 +32,6 @@ input read_file(std::string filename) {
     return ret;
 }
 
-std::string num2str(int n) {
-
-    std::string r;
-
-    if (n < 10) r += "0";
-
-    r += std::to_string(n);
-
-    return r;
-}
-
 void print_results(const std::vector<result>& results) {
 
     size_t p1_ans_max_length = 6;
@@ -93,7 +82,7 @@ int main(int argc, char *args[]) {
     std::vector<solve_fnc> solutions = {
         solve_day01, solve_day02, solve_day03, solve_day04, solve_day05,
         solve_day06, solve_day07, solve_day08, solve_day09, solve_day10,
-        solve_day11, solve_day12, solve_day13, //solve_day14, solve_day15,
+        solve_day11, solve_day12, solve_day13, solve_day14, //solve_day15,
         //solve_day16, solve_day17, solve_day18, solve_day19, solve_day20,
         //solve_day21, solve_day22, solve_day23, solve_day24, solve_day25,
     };
@@ -109,8 +98,9 @@ int main(int argc, char *args[]) {
     for (size_t i = 0; i < solutions.size(); ++i) {
         if (single_run_day && i != single_run_day-1) continue;
 
-        std::string input_file = "../data/day" + num2str(i+1) + ".txt";
-        input in = read_file(input_file);
+        char filename[256];
+        std::snprintf(filename, 256, "../data/day%02lu.txt", i+1);
+        input in = read_file(std::string(filename));
 
         result r;
         r.day = i+1;
