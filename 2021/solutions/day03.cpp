@@ -1,20 +1,23 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
+#include <cassert>
 
 #include "../aoc.hpp"
 
-std::string calc_most_common_bits(input& data) {
+std::string calc_most_common_bits(const input& data, std::vector<bool> *filtered = nullptr) {
+
     std::string ret(data[0].size(), '0');
-
     std::vector<int> one_count(data[0].size(), 0);
-
     int max_count = data.size();
 
-    for (auto& l : data) {
-        for (unsigned int i = 0; i < l.size(); ++i) {
-            if (l[i] == '1') {
+    if (filtered)
+        max_count -= sum(*filtered);
+
+    for (size_t j = 0; j < data.size(); ++j) {
+        if (filtered && (*filtered)[j]) continue;
+        for (unsigned int i = 0; i < data[j].size(); ++i) {
+            if (data[j][i] == '1') {
                 one_count[i]++;
             }
         }
@@ -29,45 +32,50 @@ std::string calc_most_common_bits(input& data) {
     return ret;
 }
 
-int bit_criteria_filter(input data, bool most_common_bit = true) {
 
+
+int bit_criteria_filter(const input& data, bool most_common_bit = true) {
+
+    std::vector<bool> filtered(data.size(), false);
+    int unfiltered_count = filtered.size();
     for (unsigned int i = 0; i < data[0].size(); ++i) {
-        if (data.size() <= 1) break;
+        if (unfiltered_count <= 1) break;
 
 
-        std::string comparison = calc_most_common_bits(data);
+        std::string comparison = calc_most_common_bits(data, &filtered);
 
-        unsigned int j = 0;
-
-        while (j < data.size()) {
+        for (size_t j = 0; j < data.size(); ++j) {
+            if (filtered[j]) continue;
             if (data[j][i] == comparison[i]) {
-                if (most_common_bit)
-                    j++;
-                else
-                    data.erase(data.begin()+j);
+                if (!most_common_bit) {
+                    filtered[j] = true;
+                    unfiltered_count--;
+                }
             } else {
-                if (most_common_bit)
-                    data.erase(data.begin()+j);
-                else
-                    j++;
+                if (most_common_bit) {
+                    filtered[j] = true;
+                    unfiltered_count--;
+                }
             }
         }
     }
 
-    if (data.size() == 1) {
-        return std::stoi(data[0], 0, 2);
-    } else {
-        std::cout << "not left with single data entry, actual count: " << data.size() << std::endl;
-        return -1;
+    assert(unfiltered_count == 1);
+
+    size_t i = 0;
+    while (i < filtered.size()) {
+        if (!filtered[i]) {
+            break;
+        }
+        ++i;
     }
+
+    return std::stoi(data[i], nullptr, 2);
 }
 
 answer solve_day03(input& in) {
 
     answer a;
-
-    // remove empty line
-    in.pop_back();
 
     std::string gamma_rate_str = calc_most_common_bits(in);
     std::string epsilon_rate_str(gamma_rate_str.size(), '0');
@@ -80,8 +88,8 @@ answer solve_day03(input& in) {
         }
     }
 
-    int gamma_rate = std::stoi(gamma_rate_str, 0, 2);
-    int epsilon_rate = std::stoi(epsilon_rate_str, 0, 2);
+    int gamma_rate = std::stoi(gamma_rate_str, nullptr, 2);
+    int epsilon_rate = std::stoi(epsilon_rate_str, nullptr, 2);
 
     int power_consumption = gamma_rate * epsilon_rate;
 

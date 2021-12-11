@@ -1,43 +1,8 @@
-
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
 
 #include "../aoc.hpp"
-
-std::vector<int> parse_bingo_board_line(std::string line) {
-    std::vector<int> ret;
-    ret.reserve(5);
-
-    size_t idx = 0;
-    while (true) {
-        ret.push_back(std::stoi(line, &idx));
-        if (idx >= line.size()) break;
-        while (line[idx] == ' ') idx++;
-
-        line = line.substr(idx);
-    }
-
-
-    return ret;
-}
-
-std::vector<int> parse_drawn_numbers(std::string data) {
-
-    std::vector<int> ret;
-
-    size_t idx = 0;
-    while (true) {
-        ret.push_back(std::stoi(data, &idx));
-        if (idx >= data.size()) break;
-        if (data[idx] == ',') idx++;
-
-        data = data.substr(idx);
-    }
-
-    return ret;
-}
 
 struct bingo_board {
 
@@ -73,8 +38,6 @@ struct bingo_board {
                 board[i][j] = data[i][j];
             }
         }
-
-        return;
     }
 
     void to_string() {
@@ -105,13 +68,15 @@ struct bingo_board {
                     if (vert_bingo || horizontal_bingo) {
                         has_bingo = true;
                         winning_nr = n;
+
                         // we got a bingo
                         return true;
                     }
 
-                    else
+                    else {
                         //mark didn't end up in a bingo
                         return false;
+                    }
                 }
 
             }
@@ -141,7 +106,11 @@ answer solve_day04(input& in) {
     answer a;
 
     std::vector<bingo_board> bingo_boards;
-    std::vector<int> number_order = parse_drawn_numbers(in[0]);
+    std::vector<int> number_order;
+
+    for (auto& s : split(in[0], ',')) {
+        number_order.push_back(std::stoi(s));
+    }
 
     std::vector<std::vector<int>> tmp(5);
 
@@ -149,7 +118,11 @@ answer solve_day04(input& in) {
         bingo_board cur;
 
         for (unsigned int j = 0; j < 5; ++j) {
-            tmp[j] = parse_bingo_board_line(in[i + j]);
+            tmp[j].clear();
+
+            for (auto& s : split(in[i + j])) {
+                tmp[j].push_back(std::stoi(s));
+            }
         }
 
         cur.set_board(tmp);
@@ -170,6 +143,7 @@ answer solve_day04(input& in) {
             if (bb.mark_number(n)) {
                 bingo_count++;
 
+                // the first bingo board with a bingo
                 if (bingo_count == 1) {
                     a.part1 = std::to_string(bb.calc_final_score());
                 }
@@ -182,7 +156,7 @@ answer solve_day04(input& in) {
             }
         }
 
-        if ( bingo_count == bingo_boards.size()) break;
+        if (bingo_count == bingo_boards.size()) break;
     }
 
     return a;

@@ -1,45 +1,42 @@
-
 #include <iostream>
 #include <string>
 #include <vector>
-#include <algorithm>
-#include <utility>
+#include <array>
 
 #include "../aoc.hpp"
 
-// start 22:33
 answer solve_day02(input& in) {
 
     answer a;
 
-    // remove empty line
-    in.pop_back();
-
-
-
-    std::vector<std::pair<std::string, int>> data;
+    std::vector<std::array<int, 2>> data;
     data.reserve(in.size());
 
-    for (auto& l : in) {
-        size_t sep_pos = l.find(' ');
+    for (const auto& l : in) {
+        size_t del_pos = l.find(' ');
+        int tmp = 0;
 
-        std::string cmd = l.substr(0, sep_pos);
-        int val = std::stoi(l.substr(sep_pos+1));
-        data.push_back(std::make_pair(cmd, val));
+        if (l[0] == 'u') {
+            tmp = 1;
+        } else if (l[0] == 'd') {
+            tmp = 2;
+        }
+
+        data.push_back(std::array<int, 2>({tmp, std::stoi(l.substr(del_pos+1))}));
     }
 
     int depth = 0;
     int horizontal_pos = 0;
 
-    for (auto& c : data) {
-        if (c.first == "forward") {
-            horizontal_pos += c.second;
-        } else if (c.first == "up") {
-            depth -= c.second;
+    for (const auto& c : data) {
+        if (c[0] == 0) {
+            horizontal_pos += c[1];
+        } else if (c[0] == 1) {
+            depth -= c[1];
 
         } else {
             // down
-            depth += c.second;
+            depth += c[1];
         }
     }
 
@@ -51,44 +48,19 @@ answer solve_day02(input& in) {
     horizontal_pos = 0;
     int aim = 0;
 
-    for (auto& c : data) {
-        if (c.first == "forward") {
-            horizontal_pos += c.second;
-            depth += aim * c.second;
-        } else if (c.first == "up") {
-            aim -= c.second;
+    for (const auto& c : data) {
+        if (c[0] == 0) {
+            horizontal_pos += c[1];
+            depth += aim * c[1];
+        } else if (c[0] == 1) {
+            aim -= c[1];
         } else {
             // down
-            aim += c.second;
+            aim += c[1];
         }
     }
 
     a.part2 = std::to_string(depth * horizontal_pos);
-/*
-    int incr_count = 0;
 
-    for (unsigned int i = 1; i < data.size(); ++i) {
-        if (data[i] > data[i-1])
-            incr_count++;
-    }
-
-    a.part1 = std::to_string(incr_count);
-
-
-    // part 2
-
-    incr_count = 0;
-
-    for (unsigned int i = 0; i < data.size() - 3; ++i) {
-        int prev_window = data[i] + data[i+1] + data[i+2];
-        int cur_window = data[i+1] + data[i+2] + data[i+3];
-
-        if (cur_window > prev_window) {
-            incr_count++;
-        }
-    }
-
-    a.part2 = std::to_string(incr_count);
-*/
     return a;
 }
