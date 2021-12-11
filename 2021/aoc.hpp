@@ -3,6 +3,29 @@
 #include <vector>
 #include <string>
 
+std::vector<std::string> split(const std::string& str, char sep = ' ', bool keep_empty_splits = false);
+
+
+template <typename T>
+struct sum_type { typedef T type; };
+
+template <>
+struct sum_type<bool> { typedef unsigned int type; };
+
+template <typename T>
+typename sum_type<T>::type sum(const std::vector<T>& in) {
+    typename sum_type<T>::type sum = 0;
+
+    for (size_t i = 0; i < in.size(); ++i)
+        sum += in[i];
+
+    return sum;
+}
+
+
+template <>
+sum_type<bool>::type sum<bool>(const std::vector<bool>& in);
+
 struct answer {
     std::string part1 = "";
     std::string part2 = "";
