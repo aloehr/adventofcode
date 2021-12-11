@@ -13,7 +13,7 @@ add_executable(
     solutions/day04.cpp
     solutions/day05.cpp
     solutions/day06.cpp
-    #solutions/day07.cpp
+    solutions/day07.cpp
     #solutions/day08.cpp
     #solutions/day09.cpp
     #solutions/day10.cpp
