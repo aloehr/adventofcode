@@ -2,30 +2,21 @@
 #include <string>
 #include <vector>
 #include <map>
-#include <cassert>
 
 #include "../aoc.hpp"
 
-// checks if a number is already stored inside a vector
-bool is_in(const std::vector<int>& v, const int cmp) {
-    for (const int n : v) if (n == cmp) return true;
-
-    return false;
-}
-
 // counts recursively all pathes from a starting point to the end node (DFS)
-// visited_twice == false allows one small cave to be visited twice (p2)
+// visit_twice == false allows one small cave to be visited twice (p2)
 int count_all_pathes(
     const int cur_node,
     const std::vector<std::vector<int>>& edges,
     const std::vector<bool>& is_small_cave,
     const int start,
     const int end,
-    const bool visited_twice = false
+    std::vector<int>& visited,
+    const bool visit_twice = false
 ) {
-    static std::vector<int> visited;
-
-    visited.push_back(cur_node);
+    visited[cur_node]++;
 
     // try every edge from current node to continue the path
     int path_count = 0;
@@ -35,17 +26,17 @@ int count_all_pathes(
         if (n == end) {
             path_count += 1;
         }
-        else if (!is_small_cave[n] || !is_in(visited, n)) {
-            path_count += count_all_pathes(n, edges, is_small_cave, start, end, visited_twice);
+        else if (!is_small_cave[n] || !visited[n]) {
+            path_count += count_all_pathes(n, edges, is_small_cave, start, end, visited, visit_twice);
         }
         // p2 - if we reach this cur_node is a small cave
-        //      and we will have visited it once before
-        else if (!visited_twice && n != start && n != end) {
-            path_count += count_all_pathes(n, edges, is_small_cave, start, end, true);
+        //      and we will have visited it once before and it can't be an end_node either
+        else if (!visit_twice && n != start) {
+            path_count += count_all_pathes(n, edges, is_small_cave, start, end, visited, true);
         }
     }
 
-    visited.pop_back();
+    visited[cur_node]--;
     return path_count;
 }
 
@@ -81,8 +72,14 @@ answer solve_day12(input& in) {
         edges[node_ids[nodes[1]]].push_back(node_ids[nodes[0]]);
     }
 
-    a.part1 = std::to_string(count_all_pathes(start_id, edges, node_small_cave, start_id, end_id, true));
-    a.part2 = std::to_string(count_all_pathes(start_id, edges, node_small_cave, start_id, end_id));
+    auto visits = std::vector<int>(node_ids.size());
+    a.part1 = std::to_string(
+        count_all_pathes(start_id, edges, node_small_cave, start_id, end_id, visits, true)
+    );
+
+    a.part2 = std::to_string(
+        count_all_pathes(start_id, edges, node_small_cave, start_id, end_id, visits)
+    );
 
     return a;
 }
