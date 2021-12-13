@@ -1,11 +1,30 @@
 #include <iostream>
-#include <sstream>
 #include <string>
 #include <vector>
 #include <array>
 #include <set>
 
 #include "../aoc.hpp"
+
+size_t fold_count(
+    const std::array<int, 2>& fl,
+    const std::set<std::array<int, 2>>& dots
+) {
+
+    size_t count = dots.size();
+    for (auto p : dots) {
+
+        if (p[fl[0]] >= fl[1]) {
+            p[fl[0]] = fl[1] - (p[fl[0]] - fl[1]);
+
+            if (dots.count(p)) {
+                count--;
+            }
+        }
+    }
+
+    return count;
+}
 
 std::set<std::array<int, 2>> fold(
     const std::vector<std::array<int, 2>>& fold_lines,
@@ -52,7 +71,7 @@ answer solve_day13(input& in) {
         }
     }
 
-    a.part1 = std::to_string(fold({fold_lines[0]}, dots).size());
+    a.part1 = std::to_string(fold_count(fold_lines[0], dots));
 
     // part 2
     dots = fold(fold_lines, dots);
@@ -65,17 +84,17 @@ answer solve_day13(input& in) {
         max_y = std::max(max_y, a[1]);
     }
 
-    std::stringstream ss;
+    std::string str((max_x + 2) * (max_y + 1), '.');
 
-    for (int y = 0; y <= max_y; ++y) {
-        for (int x = 0; x <= max_x; ++x) {
-            if (dots.count({x, y})) ss << "#";
-            else ss << ".";
-        }
-        ss << "\n";
+    for (const auto& d : dots) {
+        str[(max_x + 2) * d[1] + d[0]] = '#';
     }
 
-    std::string rslt =
+    for (int y = 0; y <= max_y; ++y) {
+        str[(max_x + 2) * y + max_x + 1] = '\n';
+    }
+
+    const std::string rslt =
 ".##..###..####.#....###..####.####.#...\n\
 #..#.#..#....#.#....#..#.#.......#.#...\n\
 #....#..#...#..#....#..#.###....#..#...\n\
@@ -83,14 +102,13 @@ answer solve_day13(input& in) {
 #..#.#....#....#....#....#....#....#...\n\
 .##..#....####.####.#....#....####.####\n";
 
-    if (ss.str() != rslt) {
+    if (str != rslt) {
         std::cout << "Reslult day 12 part 2:" << std::endl;
-        std::cout << ss.str() << std::endl;
+        std::cout << str << std::endl;
         a.part2 = "look above table";
     } else {
         a.part2 = "CPZLPFZL";
     }
-
 
     return a;
 }
