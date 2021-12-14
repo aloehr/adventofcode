@@ -29,8 +29,8 @@ input read_file(std::string filename) {
         ret.emplace_back(line);
     }
 
-    // remove last line if empty
-    while (ret.back().empty()) ret.pop_back();
+    // trim trailing empty lines
+    while (ret.size() && ret.back().empty()) ret.pop_back();
 
     return ret;
 }
