@@ -1,18 +1,19 @@
-#include <algorithm>
 #include <iostream>
 #include <string>
 #include <vector>
 #include <array>
 #include <limits>
+#include <queue>
 
 #include "../aoc.hpp"
 
+
+// resizes input according to p2 requirements
 input resize(const input& in) {
     size_t h = in.size();
     size_t w = in[0].size();
 
     input ret(h * 5, std::string(w*5, '0'));
-
 
     for (size_t i = 0; i < 5; ++i) {
         for (size_t j = 0; j < 5; ++j) {
@@ -22,15 +23,15 @@ input resize(const input& in) {
                     ret[i * h + k][j * w + l] = (tmp > 9 ? tmp - 9 : tmp) + '0';
                 }
             }
-
         }
     }
 
     return ret;
 }
 
+// returns an vec of valid neighbours
 std::vector<std::array<size_t, 2>> neighbours(const std::array<size_t, 2>& pos, const size_t h, const size_t w) {
-    std::vector<std::array<size_t, 2>> ret;
+    std::vector<std::array<size_t, 2>> ret(4);
 
     if (pos[0] > 0) ret.push_back({pos[0] - 1, pos[1]});
     if (pos[0] < h - 1) ret.push_back({pos[0] + 1, pos[1]});
@@ -40,43 +41,39 @@ std::vector<std::array<size_t, 2>> neighbours(const std::array<size_t, 2>& pos, 
     return ret;
 }
 
-long long dikstra(const std::vector<std::string>& rd) {
-    size_t h = rd.size();
-    size_t w = rd[0].size();
+// simple dikstra algo with priority queue
+int dikstra(const input& rel_d) {
+    size_t h = rel_d.size();
+    size_t w = rel_d[0].size();
 
-    std::vector<std::array<int, 2>> nb = {{-1, 0}, {1, 0}, {0, -1}, {0, 1}};
+    int inf = std::numeric_limits<int>::max();
 
-    long long inf = std::numeric_limits<long long>::max();
+    std::vector<int> abs_d(h * w, inf);
+    abs_d[0] = 0;
 
-    std::vector<long long> ab(h * w, inf);
-    ab[0] = 0;
+    auto cmp = [&] (const size_t a, const size_t b) {
+        return abs_d[a] > abs_d[b];
+    };
 
-    std::vector<long long> anchestors(h * w, -1);
+    std::priority_queue<size_t, std::vector<size_t>, decltype(cmp)> q(cmp);
+    q.push(0);
 
-    std::vector<std::array<size_t, 2>> q(1, {0, 0});
+    while (q.size()) {
 
-    while (ab.back() == inf) {
+        auto u = q.top();
+        q.pop();
 
-        std::sort(q.begin(), q.end(), [&] (const std::array<size_t, 2>& a, const std::array<size_t, 2>& b) {
-            return ab[a[0] * w + a[1]] > ab[b[0] * w + b[1]];
-        });
+        for (const auto& v : neighbours({u/w, u%w}, h, w)) {
+            size_t tmp = v[0] * w + v[1];
 
-        auto u = q.back();
-        q.pop_back();
-
-        for (const auto& v : neighbours(u, h, w)) {
-            if (ab[v[0] * w + v[1]] == inf) {
-                long long alt_d = ab[u[0] * w + u[1]] + rd[v[0]][v[1]] - '0';
-                if (alt_d < ab[v[0] * w + v[1]]) {
-                    ab[v[0] * w + v[1]] = alt_d;
-                    anchestors[v[0] * w + v[1]] = u[0] * w + u[1];
-                    q.push_back(v);
-                }
+            if (abs_d[tmp] == inf) {
+                abs_d[tmp] = abs_d[u] + rel_d[v[0]][v[1]] - '0';
+                q.push(tmp);
             }
         }
     }
 
-    return ab.back();
+    return abs_d.back();
 }
 
 answer solve_day15(input& in) {
