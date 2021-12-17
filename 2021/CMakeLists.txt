@@ -1,6 +1,6 @@
 project(aoc2021)
 
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
 
 add_executable(
@@ -23,7 +23,7 @@ add_executable(
     solutions/day14.cpp
     solutions/day15.cpp
     solutions/day16.cpp
-    #solutions/day17.cpp
+    solutions/day17.cpp
     #solutions/day18.cpp
     #solutions/day19.cpp
     #solutions/day20.cpp
