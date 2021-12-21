@@ -3,33 +3,49 @@
 #include <vector>
 #include <unordered_map>
 #include <sstream>
+#include <tuple>
 
 #include "../aoc.hpp"
 
+std::tuple<long, long> min_max(const std::vector<long>& v) {
+    long min = v[0];
+    long max = v[0];
+
+    for (size_t i = 1; i < v.size(); ++i) {
+        // special min, min == smallest min > 0 and only if everything is 0 it will be 0
+        if (!min) {
+            min = v[i];
+        }
+        else if (v[i]) {
+            min = std::min(min, v[i]);
+        }
+
+        max = std::max(max, v[i]);
+    }
+
+    return std::make_tuple(min, max);
+}
+
 void transform(
-    std::unordered_map<std::string, long long>& pairs_quantity,
-    std::unordered_map<char, long long>& chars_quantity,
-    std::unordered_map<std::string, char>& rules,
+    std::unordered_map<std::string, long>& pairs_quantity,
+    std::vector<long>& chars_quantity,
+    std::unordered_map<std::string, std::array<std::string, 2>>& rules,
     unsigned int steps
 ) {
     auto pq_copy = pairs_quantity;
-    std::string tmp = "XX";
 
     while (steps--) {
-        for (auto& p : pq_copy) p.second = 0;
+        for (auto& [pair, count] : pq_copy) {
+            count = 0;
+        }
 
-        for (const auto& p : pairs_quantity) {
-            char r = rules[p.first];
+        for (const auto& [pair, count] : pairs_quantity) {
+            const auto& np = rules[pair];
 
-            tmp[0] = p.first[0];
-            tmp[1] = r;
-            pq_copy[tmp] += p.second;
+            pq_copy[np[0]] += count;
+            pq_copy[np[1]] += count;
 
-            tmp[0] = r;
-            tmp[1] = p.first[1];
-            pq_copy[tmp] += p.second;
-
-            chars_quantity[r] += p.second;
+            chars_quantity[np[0][1] - 'A'] += count;
         }
 
         std::swap(pq_copy, pairs_quantity);
@@ -40,22 +56,24 @@ answer solve_day14(input& in) {
 
     answer a;
 
-    std::unordered_map<std::string, long long> pairs_quantity;
-    std::unordered_map<char, long long> chars_quantity;
+    std::unordered_map<std::string, long> pairs_quantity;
+    std::vector<long> chars_quantity(26);
 
-    std::unordered_map<std::string, char> rules;
+    std::unordered_map<std::string, std::array<std::string, 2>> rules;
 
     for (size_t i = 2; i < in.size(); ++i) {
         auto tmp = split(in[i]);
 
-        rules[tmp[0]] = tmp[2][0];
+        std::string np1 = tmp[0].substr(0, 1) + tmp[2];
+        std::string np2 = tmp[2] + tmp[0].substr(1, 1);
+
+        rules[tmp[0]] = {np1, np2};
 
         pairs_quantity[tmp[0]] = 0;
-        chars_quantity[tmp[2][0]] = 0;
     }
 
     for (auto c : in[0]) {
-        chars_quantity[c]++;
+        chars_quantity[c - 'A']++;
     }
     for (size_t i = 0; i < in[0].size() - 1; ++i) {
         pairs_quantity[in[0].substr(i, 2)]++;
@@ -63,30 +81,18 @@ answer solve_day14(input& in) {
 
     transform(pairs_quantity, chars_quantity, rules, 10);
 
-    long long mmin = chars_quantity.begin()->second;
-    long long mmax= chars_quantity.begin()->second;
+    auto [min, max] = min_max(chars_quantity);
 
-    for (auto& p : chars_quantity) {
-        mmin = std::min(mmin, p.second);
-        mmax = std::max(mmax, p.second);
-    }
-
-    a.part1 = std::to_string(mmax - mmin);
+    a.part1 = std::to_string(max - min);
 
 
     // part 2
 
     transform(pairs_quantity, chars_quantity, rules, 30);
 
-    mmin = chars_quantity.begin()->second;
-    mmax= chars_quantity.begin()->second;
+    std::tie(min, max) = min_max(chars_quantity);
 
-    for (auto& p : chars_quantity) {
-        mmin = std::min(mmin, p.second);
-        mmax = std::max(mmax, p.second);
-    }
-
-    a.part2 = std::to_string(mmax - mmin);
+    a.part2 = std::to_string(max - min);
 
     return a;
 }
