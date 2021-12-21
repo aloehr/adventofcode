@@ -26,7 +26,7 @@ add_executable(
     solutions/day17.cpp
     solutions/day18.cpp
     solutions/day19.cpp
-    #solutions/day20.cpp
+    solutions/day20.cpp
     #solutions/day21.cpp
     #solutions/day22.cpp
     #solutions/day23.cpp
