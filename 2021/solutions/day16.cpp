@@ -2,10 +2,11 @@
 #include <string>
 #include <vector>
 #include <sstream>
-#include <bitset>
 #include <cassert>
+#include <map>
 
 #include "../aoc.hpp"
+
 
 struct packet {
     int version;
@@ -15,19 +16,19 @@ struct packet {
     std::vector<packet> subpackets;
 };
 
-int sum_ver_numbers(std::vector<packet> packets) {
+int sum_ver_numbers(const packet& p) {
     int sum = 0;
 
-    for (auto& p : packets) {
-        sum += p.version;
+    sum += p.version;
 
-        sum += sum_ver_numbers(p.subpackets);
+    for (const auto& sp : p.subpackets) {
+        sum += sum_ver_numbers(sp);
     }
 
     return sum;
 }
 
-long evaluate_packet(packet& p) {
+long evaluate_packet(const packet& p) {
     long a = 0;
     long b = 0;
     switch (p.type_id) {
@@ -104,46 +105,47 @@ long evaluate_packet(packet& p) {
     }
 }
 
-packet parse_packet(std::string& d) {
+std::string get_bits(const std::string& d, size_t& idx, const size_t len) {
+    std::string ret = d.substr(idx, len);
+    idx += len;
+
+    return ret;
+}
+
+packet parse_packet(const std::string& d, size_t& idx) {
     packet p;
 
-    p.version = std::stoi(d.substr(0, 3), nullptr, 2);
-    d = d.substr(3);
-    p.type_id = std::stoi(d.substr(0, 3), nullptr, 2);
-    d = d.substr(3);
+    p.version = std::stoi(get_bits(d, idx, 3), nullptr, 2);
+    p.type_id = std::stoi(get_bits(d, idx, 3), nullptr, 2);
 
-    // literal value
     if (p.type_id == 4) {
-        long val = 0L;
-        while (d[0] == '1') {
-            val += std::stoi(d.substr(1, 4), nullptr, 2);
-            val <<= 4;
-            d = d.substr(5);
+        // literal value packet
+        p.value = 0;
+        while (d[idx++] == '1') {
+            p.value+= std::stoi(get_bits(d, idx, 4), nullptr, 2);
+            p.value <<= 4;
         }
 
-        val += std::stoi(d.substr(1, 4), nullptr, 2);
-        p.value = val;
-        d = d.substr(5);
+        p.value += std::stoi(get_bits(d, idx, 4), nullptr, 2);
 
     }
     else {
-        if (d[0] == '0') {
+        // operator packet
+        if (d[idx++] == '0') {
             // next 15 bits, total bitcount of subpackets
-            int c = std::stoi(d.substr(1, 15), nullptr, 2);
-            d = d.substr(16);
+            int c = std::stoi(get_bits(d, idx, 15), nullptr, 2);
 
-            size_t s = d.size();
+            size_t s = idx;
 
-            while (d.size() > s-c) {
-                p.subpackets.push_back(parse_packet(d));
+            while (idx < s + c) {
+                p.subpackets.push_back(parse_packet(d, idx));
             }
         } else {
             // next 11 bits, total count of subpackets
-            int c = std::stoi(d.substr(1, 11), nullptr, 2);
-            d = d.substr(12);
+            int c = std::stoi(get_bits(d, idx, 11), nullptr, 2);
 
             while (c--) {
-                p.subpackets.push_back(parse_packet(d));
+                p.subpackets.push_back(parse_packet(d, idx));
             }
         }
     }
@@ -151,37 +153,47 @@ packet parse_packet(std::string& d) {
     return p;
 }
 
+packet parse_packet(const std::string& d) {
+    size_t idx = 0;
+    return parse_packet(d, idx);
+}
+
 answer solve_day16(input& in) {
 
     answer a;
 
-    std::stringstream ss;
-    std::stringstream ss_tmp;
+    std::map<char, std::string> dict = {
+        {'0', "0000"},
+        {'1', "0001"},
+        {'2', "0010"},
+        {'3', "0011"},
+        {'4', "0100"},
+        {'5', "0101"},
+        {'6', "0110"},
+        {'7', "0111"},
+        {'8', "1000"},
+        {'9', "1001"},
+        {'A', "1010"},
+        {'B', "1011"},
+        {'C', "1100"},
+        {'D', "1101"},
+        {'E', "1110"},
+        {'F', "1111"}
+    };
 
-    std::vector<packet> packets;
+    std::stringstream ss;
 
     for (auto c : in[0]) {
-        ss_tmp << "0x" << c;
-        std::bitset<4> bs(std::stoi(ss_tmp.str(), nullptr, 16));
-
-        ss << bs;
-        ss_tmp.str("");
+        ss << dict[c];
     }
 
+    packet p = parse_packet(ss.str());
 
-    std::string d = ss.str();
-
-    while (d.size() >= 11) {
-        packets.push_back(parse_packet(d));
-    }
-
-    a.part1 = std::to_string(sum_ver_numbers(packets));
+    a.part1 = std::to_string(sum_ver_numbers(p));
 
 
-    assert(packets.size() == 1);
     // part 2
-
-    a.part2 = std::to_string(evaluate_packet(packets[0]));
+    a.part2 = std::to_string(evaluate_packet(p));
 
     return a;
 }
