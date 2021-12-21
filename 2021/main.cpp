@@ -114,7 +114,7 @@ int main(int argc, char *args[]) {
     for (size_t i = 0; i < solutions.size(); ++i) {
         if (single_run_day && i != single_run_day) continue;
 
-        std::string input_file = "../data/day" + num2str(i+1) + ".txt";
+        std::string input_file = "../../data/day" + num2str(i+1) + ".txt";
         input in = read_file(input_file);
 
         result r;

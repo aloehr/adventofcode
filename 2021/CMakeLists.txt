@@ -1,7 +1,6 @@
-project(aoc2021)
+cmake_minimum_required(VERSION 3.18)
 
-set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -Wall -O3")
+project(aoc2021)
 
 add_executable(
     aoc
@@ -33,3 +32,6 @@ add_executable(
     #solutions/day24.cpp
     #solutions/day25.cpp
 )
+
+target_compile_options(aoc PRIVATE -Wall)
+target_compile_features(aoc PRIVATE cxx_std_17)
