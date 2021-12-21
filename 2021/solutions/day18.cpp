@@ -9,33 +9,113 @@
 
 struct SnailNumber {
 
-    long l = 0, r = 0;
+    long l = 0;
+    long r = 0;
     SnailNumber* lp = nullptr;
     SnailNumber* rp = nullptr;
     SnailNumber* p = nullptr;
 
     SnailNumber() = default;
     SnailNumber(long l, long r) : l(l), r(r) {};
-    SnailNumber(SnailNumber* l, SnailNumber* r) : lp(l), rp(r) {};
-    SnailNumber(SnailNumber* l, long r) : r(r), lp(l) {};
-    SnailNumber(long l, SnailNumber* r) : l(l), rp(r) {};
 
-    SnailNumber(const SnailNumber* c) {
-        this->l = c->l;
-        this->r = c->r;
+    SnailNumber& operator=(const SnailNumber& o) {
+        this->l = o.l;
+        this->r = o.r;
 
-        if (c->lp) {
-            this->lp = new SnailNumber(c->lp);
+        if (o.lp) {
+            this->lp = new SnailNumber(*(o.lp));
             this->lp->p = this;
 
         }
-        if (c->rp) {
-            this->rp = new SnailNumber(c->rp);
+        if (o.rp) {
+            this->rp = new SnailNumber(*(o.rp));
             this->rp->p = this;
         }
 
-        this->p = c->p;
+        this->p = o.p;
 
+        return *this;
+    }
+
+    SnailNumber& operator=(SnailNumber&& o) {
+        if (o.p) {
+            if (o.p->lp && o.p->lp == &o) {
+                o.p->lp = this;
+            } else  {
+                o.p->rp = this;
+            }
+            this->p = o.p;
+        }
+
+        this->l = o.l;
+        this->r = o.r;
+
+        if (o.lp) {
+            this->lp = o.lp;
+            this->lp->p = this;
+        }
+
+        if (o.rp) {
+            this->rp = o.rp;
+            this->rp->p = this;
+        }
+
+        o.p = nullptr;
+        o.lp = nullptr;
+        o.rp = nullptr;
+
+        o.l = 0;
+        o.r = 0;
+
+        return *this;
+    }
+
+    SnailNumber(SnailNumber&& o) {
+        (*this) = o;
+    }
+
+    SnailNumber(const SnailNumber& o) {
+        (*this) = o;
+    }
+
+    SnailNumber(const std::string& str, size_t& idx) {
+        idx += 1;
+
+        if (idx == 0) idx = 1;
+
+        if (str[idx] == '[') {
+
+            this->lp = new SnailNumber(str, idx);
+            this->lp->p = this;
+        }
+        else {
+            size_t t;
+
+            this->l = std::stol(str.substr(idx), &t);
+            idx += t+1;
+        }
+
+        if (str[idx] == '[') {
+            this->rp = new SnailNumber(str, idx);
+            this->rp->p = this;
+            idx++;
+        }
+        else {
+            size_t t;
+            this->r = std::stol(str.substr(idx), &t);
+            idx += t+2;
+        }
+
+    }
+
+    ~SnailNumber() {
+        if (this->rp) {
+            delete this->rp;
+        }
+
+        if (this->lp) {
+            delete this->lp;
+        }
     }
 
     long* find_first_right() {
@@ -173,10 +253,9 @@ struct SnailNumber {
         }
 
         return false;
-
     }
 
-    long magnitude() {
+    long magnitude() const {
         long mag = 0;
 
         if (lp) mag += 3 * lp->magnitude();
@@ -188,53 +267,18 @@ struct SnailNumber {
         return mag;
     }
 
-    void add(SnailNumber* o) {
+    void add(const SnailNumber& o) {
         SnailNumber* sn = new SnailNumber(o);
-        SnailNumber* n = new SnailNumber;
-        n->l = this->l;
-        n->r = this->r;
+        SnailNumber* n = new SnailNumber(std::move(*this));
 
-        n->lp = this->lp;
-        n->rp = this->rp;
-        n->p = this;
-
-        if (n->lp) n->lp->p = n;
-        if (n->rp) n->rp->p = n;
 
         this->lp = n;
+        n->p = this;
 
         this->rp = sn;
         sn->p = this;
 
         this->reduce();
-    }
-
-    static SnailNumber* parse_sn(const std::string& str, size_t& idx, SnailNumber* p = nullptr) {
-        SnailNumber* ret = new SnailNumber;
-        ret->p = p;
-        idx++;
-
-        if (str[idx] == '[') {
-            ret->lp = parse_sn(str, idx, ret);
-        }
-        else {
-            size_t t;
-            ret->l = std::stol(str.substr(idx), &t);
-            idx += t+1;
-        }
-
-        if (str[idx] == '[') {
-            ret->rp = parse_sn(str, idx, ret);
-            idx++;
-        }
-        else {
-            size_t t;
-            ret->r = std::stol(str.substr(idx), &t);
-            idx += t+2;
-        }
-
-
-        return ret;
     }
 
     std::string to_string() const {
@@ -260,30 +304,28 @@ struct SnailNumber {
         ss << ']';
 
         return ss.str();
-
     }
-
 };
 
 answer solve_day18(input& in) {
 
     answer a;
 
-    std::vector<SnailNumber*> sns;
+    std::vector<SnailNumber> sns;
     sns.reserve(in.size());
 
     for (auto& l : in) {
         size_t idx = 0;
-        sns.push_back(SnailNumber::parse_sn(l, idx));
+        sns.emplace_back(l, idx);
     }
 
-    SnailNumber* sum = new SnailNumber(sns[0]);
+    SnailNumber sum(sns[0]);
 
     for (size_t i = 1; i < sns.size(); ++i) {
-        sum->add(sns[i]);
+        sum.add(sns[i]);
     }
 
-    a.part1 = std::to_string(sum->magnitude());
+    a.part1 = std::to_string(sum.magnitude());
 
 
     // part 2
@@ -292,11 +334,10 @@ answer solve_day18(input& in) {
         for (size_t j = 0; j < sns.size(); ++j) {
             if (i == j) continue;
 
-            SnailNumber* x = new SnailNumber(sns[i]);
-            x->add(sns[j]);
+            SnailNumber x(sns[i]);
+            x.add(sns[j]);
 
-
-            best_mag = std::max(best_mag, x->magnitude());
+            best_mag = std::max(best_mag, x.magnitude());
         }
     }
 
