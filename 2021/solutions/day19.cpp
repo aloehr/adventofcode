@@ -3,29 +3,20 @@
 #include <string>
 #include <vector>
 #include <array>
-#include <cassert>
-#include <map>
 #include <set>
 
 #include "../aoc.hpp"
 
+
 using pos_t = std::array<int, 3>;
-using dir_t = std::array<int, 3>;
 using rot_t = std::array<int, 3>;
-
-int sign(int n) {
-    int ret = n / std::abs(n);
-
-    assert(std::abs(ret) == 1);
-
-    return ret;
-}
 
 std::array<int, 3> rotate(const pos_t& p, const rot_t& r) {
     pos_t ret;
 
     for (size_t i = 0; i < 3; ++i) {
-        ret[i] = sign(r[i]) * p[std::abs(r[i])- 1];
+        int sign = r[i] & (1 << ((8 * sizeof(int)) - 1)) ? -1 : 1;
+        ret[i] = sign * p[std::abs(r[i]) - 1];
     }
 
     return ret;
@@ -34,94 +25,48 @@ std::array<int, 3> rotate(const pos_t& p, const rot_t& r) {
 struct scanner {
 
     std::vector<std::array<int, 3>> rotations = {
-    // z up
-    // a b c -> a c -b -> 1 -3 2j
-    { 1,  3, -2}, // 1 -3 2
-    {-2,  3, -1}, // -3 -1 2jkj
-    {-1,  3,  2},
-    { 2,  3,  1},
-    // z down
-    { 1, -3,  2},
-    {-2, -3,  1},
-    {-1, -3, -2},
-    { 2, -3, -1},
-    // x up
-    { 2,  1, -3},
-    { 3,  1,  2},
-    {-2,  1,  3},
-    {-3,  1, -2},
-    // x down
-    { 2, -1,  3},
-    { 3, -1, -2},
-    {-2, -1, -3},
-    {-3, -1,  2},
-    // y up
-    { 1,  2,  3},
-    { 3,  2, -1},
-    {-1,  2, -3},
-    {-3,  2,  1},
-    // y down
-    { 1, -2, -3},
-    { 3, -2,  1},
-    {-1, -2,  3},
-    {-3, -2, -1},
-/*
-    // z up
-    x  y  z
-    1  3 -2
-   -2  3 -1
-   -1  3  2
-    2  3  1
-
-    // z up
-    x  y  z
-    1 -3  2
-   -2 -3  1
-   -1 -3 -2
-    2 -3 -1
-
-    // x up
-    x   y   z
-    2   1  -3
-    3   1   2
-   -2   1   3
-   -3   1  -2
-
-    // x down
-    x   y   z
-    2  -1   3
-    3  -1  -2
-   -2  -1  -3
-   -3  -1   2
-
-    // y up
-    x   y   z
-    1   2   3
-    3   2  -1
-   -1   2  -3
-   -3   2   1
-
-   // y down
-    1  -2  -3
-    3  -2   1
-   -1  -2   3
-   -3  -2  -1
-
- */
-
+        // z up
+        { 1,  3, -2},
+        {-2,  3, -1},
+        {-1,  3,  2},
+        { 2,  3,  1},
+        // z down
+        { 1, -3,  2},
+        {-2, -3,  1},
+        {-1, -3, -2},
+        { 2, -3, -1},
+        // x up
+        { 2,  1, -3},
+        { 3,  1,  2},
+        {-2,  1,  3},
+        {-3,  1, -2},
+        // x down
+        { 2, -1,  3},
+        { 3, -1, -2},
+        {-2, -1, -3},
+        {-3, -1,  2},
+        // y up
+        { 1,  2,  3},
+        { 3,  2, -1},
+        {-1,  2, -3},
+        {-3,  2,  1},
+        // y down
+        { 1, -2, -3},
+        { 3, -2,  1},
+        {-1, -2,  3},
+        {-3, -2, -1},
     };
 
     size_t id = 0;
     pos_t pos = {0, 0, 0};
-    rot_t rot = {1, 2, 2};
+    rot_t rot = {1, 2, 3};
 
     std::vector<pos_t> beacons;
-    //std::map<std::array<size_t, 2>, dir_t> bd;
 
-    std::string to_string() {
+    std::string to_string() const {
         std::stringstream ss;
 
-        ss << "------" << id << "-------\n";
+        ss << "------" << id << "------\n";
 
         for (auto& b : beacons) {
             for (int i = 0; i < 3; ++i) {
@@ -132,20 +77,9 @@ struct scanner {
 
         return ss.str();
     }
-
-    /*static dir_t calc_bd(pos_t b1, pos_t b2) {
-        dir_t ret;
-
-        for (size_t i = 0; i < 3; ++i) {
-            ret[i] = b2[i] - b1[i];
-        }
-
-        return ret;
-    }*/
-
 };
 
-bool equal(pos_t a, pos_t b) {
+bool equal(const pos_t& a, const pos_t& b) {
     for (size_t i = 0; i < 3; ++i) {
         if (a[i] != b[i]) return false;
     }
@@ -161,22 +95,12 @@ std::string pos_str(pos_t p) {
 }
 
 bool match_scanners(const scanner& a, scanner& b) {
-
-    ////assert(b.id == 1);
-    //std::cout << "trying to match scanners " << a.id << " " << b.id << std::endl;
     for (size_t i = 0; i < b.beacons.size(); ++i) {
         for (size_t j = 0; j < a.beacons.size(); ++j) {
             for (const auto& r : a.rotations) {
-                //std::cout << "selected beacon in scanner b: " << pos_str(b.beacons[i]) << std::endl;
-                //std::cout << "selected beacon in scanner a: " << j << " " << pos_str(a.beacons[j]) << std::endl;
-                //std::cout << "with rotation matrix: " << pos_str(r) << std::endl;
+
                 auto first_b = rotate(b.beacons[i], r);
                 auto first_a = rotate(a.beacons[j], a.rot);
-
-                //first_a[0] += a.pos[0];
-                //first_a[1] += a.pos[1];
-                //first_a[2] += a.pos[2];
-                //std::cout << "rotated b: " << pos_str(first_b) << std::endl;
 
                 pos_t transl = {
                     first_a[0] - first_b[0],
@@ -184,17 +108,18 @@ bool match_scanners(const scanner& a, scanner& b) {
                     first_a[2] - first_b[2]
                 };
 
-
-                //std::cout << "translation: " << pos_str(transl) << std::endl;
-                //std::cout << "-------------------" << std::endl;
-
-                // figure out translation from i to j
-                //
                 int c = 1;
+                bool not_found = false;
                 for (size_t k = 0; k < b.beacons.size(); ++k) {
+
+                    if (b.beacons.size() - k < 12 - ((size_t)c)) {
+                        // we don't have enough beacons left in b to get more than 11 matches
+                        not_found = true;
+                        break;
+                    }
+
                     for (size_t l = 0; l < a.beacons.size(); ++l) {
                         if (k == i || l == j) continue;
-
 
                         auto cur_b = rotate(b.beacons[k], r);
 
@@ -202,14 +127,7 @@ bool match_scanners(const scanner& a, scanner& b) {
                         cur_b[1] += transl[1];
                         cur_b[2] += transl[2];
 
-
-                        // translate here
-                        //
                         auto rot_a = rotate(a.beacons[l], a.rot);
-
-                        //rot_a[0] += a.pos[0];
-                        //rot_a[1] += a.pos[1];
-                        //rot_a[2] += a.pos[2];
 
                         if (equal(cur_b, rot_a)) {
                             c++;
@@ -217,13 +135,10 @@ bool match_scanners(const scanner& a, scanner& b) {
                         }
                     }
 
-                    //if (c >= 12) break;
+                    if (c == 12 || not_found) break;
                 }
-                //if (c > 1 ) std::cout << "found matches this iter: " << c << std::endl;
-                if (c >= 12) {
-                    std::cout << "found match between scanner a (" << a.id << ") and scanner b (" << b.id << ")" << std::endl;
-                    std::cout << "a pos: " << pos_str(a.pos) << std::endl;
-                    std::cout << "transl: " << pos_str(transl) << std::endl;
+
+                if (c == 12) {
                     b.rot = r;
                     b.pos = transl;
                     b.pos[0] += a.pos[0];
@@ -232,9 +147,6 @@ bool match_scanners(const scanner& a, scanner& b) {
                     return true;
                 }
             }
-
-
-
         }
     }
 
@@ -242,12 +154,10 @@ bool match_scanners(const scanner& a, scanner& b) {
 }
 
 answer solve_day19(input& in) {
-
-
-
-    in.push_back("");
     answer a;
 
+    // actually this time we need an extra empty line at the end
+    in.push_back("");
 
     size_t scanner_id = 0;
     std::vector<scanner> scanners;
@@ -266,10 +176,7 @@ answer solve_day19(input& in) {
 
         auto tmp = split(l, ',');
 
-        std::cout << scanner_id << " " << l << std::endl;
         std::array<int, 3> b;
-        std::cout << tmp.size() << std::endl;
-        assert(tmp.size() == 3);
 
         for (size_t i = 0; i < tmp.size(); ++i) {
             b[i] = std::stoi(tmp[i]);
@@ -280,70 +187,35 @@ answer solve_day19(input& in) {
 
     std::vector<size_t> unregistered;
     for (size_t i = 1; i < scanners.size(); ++i) {
-        //std::cout << scanners[i].to_string() << std::endl;
         unregistered.push_back(i);
     }
 
-    //return a;
-/*
-selected beacon in scanner b: [553, 889, -390]
-selected beacon in scanner a: 5 [-485, -357, 347]
-with rotation matrix: [-1, 2, -3]
-rotated b: [-553, 889, 390]
-translation: [68, -1246, -43]
--------------------
-
--391,539,-444
-r: 391, 539, 444
-t: 451, -707, 401
-*/
-
     std::vector<size_t> registered;
     registered.push_back(0);
-    scanners[0].rot = {1, 2, 3};
-
-    /*for (auto& s : scanners) {
-        std::cout << s.to_string() << std::endl;
-
-        for (size_t i = 0; i < s.beacons.size(); ++i) {
-            for (size_t j = 0; j < s.beacons.size(); ++j) {
-                if (i == j) continue;
-
-
-                s.bd[{i, j}] = scanner::calc_bd(s.beacons[i], s.beacons[j]);
-            }
-        }
-    }*/
 
     while (unregistered.size()) {
-        bool found_match = false;
-        for (auto i : registered) {
-            for (size_t j = 0; j < unregistered.size(); ++j) {
-                if (match_scanners(scanners[i], scanners[unregistered[j]])) {
-                //if (true) {
-                    found_match = true;
-                    registered.push_back(unregistered[j]);
-                    unregistered.erase(unregistered.begin() + j);
-                    break;
-                }
-            }
+        // pick one registered scan
+        size_t i = registered[0];
+        registered.erase(registered.begin());
 
-            if (found_match) {
-                std::cout << "found " << registered.size() << std::endl;
-                break;
+        // check against all unregistered
+        for (size_t j = 0; j < unregistered.size(); ++j) {
+            if (match_scanners(scanners[i], scanners[unregistered[j]])) {
+                // since we found a match move the scanner from unregistered to registered
+                registered.push_back(unregistered[j]);
+                unregistered.erase(unregistered.begin() + j);
+
+                j -= 1;
             }
         }
-
-        std::cout << "registered count: " << registered.size() << std::endl;
     }
 
     std::set<pos_t> unique_beacons;
 
     for (auto& s : scanners) {
-
-        std::cout << s.id << " " << pos_str(s.pos) << std::endl;
         for (auto& b : s.beacons) {
             pos_t cur = rotate(b, s.rot);
+
             cur[0] += s.pos[0];
             cur[1] += s.pos[1];
             cur[2] += s.pos[2];
@@ -352,6 +224,7 @@ t: 451, -707, 401
         }
 
     }
+
     a.part1 = std::to_string(unique_beacons.size());
 
 
@@ -370,7 +243,6 @@ t: 451, -707, 401
             largest = std::max(c, largest);
         }
     }
-
 
     a.part2 = std::to_string(largest);
 
