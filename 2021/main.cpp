@@ -100,7 +100,7 @@ int main(int argc, char *args[]) {
         solve_day06, solve_day07, solve_day08, solve_day09, solve_day10,
         solve_day11, solve_day12, solve_day13, solve_day14, solve_day15,
         solve_day16, solve_day17, solve_day18, solve_day19, solve_day20,
-        solve_day21, //solve_day22, solve_day23, solve_day24, solve_day25,
+        solve_day21, solve_day22, //solve_day23, solve_day24, solve_day25,
     };
 
 
