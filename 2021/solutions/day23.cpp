@@ -5,9 +5,9 @@
 #include <map>
 #include <tuple>
 #include <array>
-#include <cassert>
 
 #include "../aoc.hpp"
+
 
 int cps(const char c) {
     if (c == 'A') return 1;
@@ -51,6 +51,7 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
 
     static std::map<std::string, int> mem;
 
+    // base case
     bool found_solution = true;
     for (size_t i = 0; i < rs.size() && found_solution; ++i) {
         for (auto c : rs[i]) {
@@ -62,13 +63,13 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
     }
 
     if (found_solution) {
-        //std::cout << "found solution: " << cost << " " << mem.size() << std::endl;
         return std::make_tuple(cost, true);
     }
 
     std::string x = h + rs[0] + rs[1] + rs[2] + rs[3];
     mem[x] = cost;
 
+    // first we find all possible moves for amphipods in the hallway
     std::vector<std::array<size_t, 4>> possible_moves;
 
     for (size_t i = 0; i < h.size(); ++i) {
@@ -92,10 +93,25 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
         }
     }
 
+    // then we find every move for amphipods in their rooms
     for (size_t i = 0; i < rs.size(); ++i) {
-        size_t j;
 
-        size_t room_pos = 2 + (i * 2);
+        // Don't touch rooms which are filled with only correct amphipods.
+        // This is actually a huge performance improvement, from 2 min to 750 ms.
+        bool only_correct_amphipods_in_room = true;
+        for (auto c : rs[i]) {
+            if (c == '.') continue;
+
+            if (c != ('A' + (char) i)) {
+
+                only_correct_amphipods_in_room = false;
+                break;
+            }
+        }
+        if (only_correct_amphipods_in_room) continue;
+
+        // get the first amphipod in the room
+        size_t j;
         for (j = 0; j < rs[i].size(); ++j) {
             if (rs[i][j] != '.') {
                 break;
@@ -103,6 +119,8 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
         }
 
         if (j != rs[i].size()) {
+
+            size_t room_pos = 2 + (i * 2);
             for (size_t k = 0; k < h.size(); ++k) {
                 if (h[k] == '.' && !is_room_entrance(k) && can_move_to(h, room_pos, k)) {
 
@@ -113,6 +131,7 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
         }
     }
 
+    // we apply every move we found and try recursivly if we get a solution with it
     for (const auto& m : possible_moves) {
         int new_cost = cost + m[3];
         if (lowest_cost != -1 && lowest_cost <= new_cost) continue;
@@ -121,20 +140,21 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
 
         x = h + rs[0] + rs[1] + rs[2] + rs[3];
         if (mem.count(x) == 0 || mem[x] > new_cost) {
-            auto [ret_cost, solution] = bruteforce(h, rs, new_cost, lowest_cost);
+            auto [full_cost, solution] = bruteforce(h, rs, new_cost, lowest_cost);
 
             if (solution) {
                 if (lowest_cost == -1) {
-                    lowest_cost = ret_cost;
+                    lowest_cost = full_cost;
                 }
 
-                lowest_cost = std::min(lowest_cost, ret_cost);
+                lowest_cost = std::min(lowest_cost, full_cost);
             }
         }
 
         std::swap(rs[m[1]][m[2]], h[m[0]]);
     }
 
+    // we return from the initial call, clear mem for later calls
     if (cost == 0) mem.clear();
 
     return std::make_tuple(lowest_cost, lowest_cost != -1);
@@ -145,7 +165,6 @@ answer solve_day23(input& in) {
     answer a;
 
     std::string hallway(in[1].size() - 2, '.');
-    assert(hallway.size() == 11);
     std::vector<std::string> rooms(4, "..");
 
     for (size_t i = 3; i <= 9; i += 2) {
@@ -153,13 +172,7 @@ answer solve_day23(input& in) {
         rooms[(i-3) / 2][1] = in[3][i];
     }
 
-    //hallway = "...........";
-    //rooms = {"BA", "CD", "BC", "DA"};
-    //hallway = ".B.........";
-    //rooms = {"AA", ".B", "CC", "DD"};
-
     auto [c, d] = bruteforce(hallway, rooms);
-
     a.part1 = std::to_string(c);
 
 
@@ -172,8 +185,6 @@ answer solve_day23(input& in) {
     };
 
     std::tie(c, d) = bruteforce(hallway, rooms2);
-
-
     a.part2 = std::to_string(c);
 
     return a;
