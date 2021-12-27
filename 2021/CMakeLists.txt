@@ -30,7 +30,7 @@ add_executable(
     solutions/day22.cpp
     solutions/day23.cpp
     solutions/day24.cpp
-    #solutions/day25.cpp
+    solutions/day25.cpp
 )
 
 target_compile_options(aoc PRIVATE -Wall)
