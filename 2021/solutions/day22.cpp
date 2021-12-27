@@ -4,36 +4,96 @@
 #include <vector>
 #include <array>
 #include <cassert>
+#include <set>
 
 #include "../aoc.hpp"
 
 struct Cuboid {
-    size_t id;
+
+    size_t id = 0;
     bool status;
+
+    std::vector<Cuboid> intersections;
     std::array<std::array<long, 2>, 3> area;
+
+
+    long volume() const {
+
+        long vol = (area[0][1] - area[0][0] + 1)
+            * (area[1][1] - area[1][0] + 1)
+            * (area[2][1] - area[2][0] + 1);
+
+        assert(vol >= 0);
+
+        for (auto& c : intersections) {
+            vol -= c.volume();
+        }
+
+        return vol;
+    }
+
+    void calc_intersections() {
+
+        auto& cbs = this->intersections;
+
+        for (size_t i = 0; i < cbs.size()-1; ++i) {
+            auto& cur = cbs[i];
+            for (size_t j = i+1; j < cbs.size(); ++j) {
+                auto& o = cbs[j];
+                if (cur.intersect(o)) {
+                    auto x = cur.get_intersection(o);
+                    bool already_in = false;
+                    for (auto& c : cur.intersections) {
+                        if (c.equal(x)) {
+                            already_in = true;
+                            break;
+                        }
+                    }
+
+                    if (!already_in) {
+                        cur.intersections.push_back(x);
+                    }
+                }
+            }
+
+            if (cur.intersections.size() > 1) {
+                cur.calc_intersections();
+            }
+        }
+
+    }
 
     bool intersect(const Cuboid& o) const {
         for (size_t i = 0; i < 3; ++i) {
-            if (area[i][0] < o.area[i][0] && area[i][1] < o.area[i][0])
-                return false;
-            if (area[i][0] > o.area[i][1] && area[i][1] > o.area[i][1])
+            if (area[i][0] > o.area[i][1] || area[i][1] < o.area[i][0])
                 return false;
         }
 
         return true;
     }
 
-    bool fully_inside(const Cuboid& o) const {
+    bool equal(const Cuboid& o) const {
+        return area[0][0] == o.area[0][0]
+            && area[0][1] == o.area[0][1]
+            && area[1][0] == o.area[1][0]
+            && area[1][1] == o.area[1][1]
+            && area[2][0] == o.area[2][0]
+            && area[2][1] == o.area[2][1];
+    }
 
-        for (size_t i = 0; i < 3; ++i) {
-            if (area[i][0] >= o.area[i][0] && area[i][1] <= o.area[i][1]) {
-            }
-            else {
-                return false;
-            }
+    Cuboid get_intersection(const Cuboid& o) const {
+        Cuboid ret;
+
+        if (this->intersect(o)) {
+            ret.area[0][0] = std::max(area[0][0], o.area[0][0]);
+            ret.area[0][1] = std::min(area[0][1], o.area[0][1]);
+            ret.area[1][0] = std::max(area[1][0], o.area[1][0]);
+            ret.area[1][1] = std::min(area[1][1], o.area[1][1]);
+            ret.area[2][0] = std::max(area[2][0], o.area[2][0]);
+            ret.area[2][1] = std::min(area[2][1], o.area[2][1]);
         }
 
-        return true;
+        return ret;
     }
 
     std::string to_string() const {
@@ -59,32 +119,6 @@ struct Cuboid {
 answer solve_day22(input& in) {
 
     answer a;
-/*
-    in = {
-"on x=-20..26,y=-36..17,z=-47..7",
-"on x=-20..33,y=-21..23,z=-26..28",
-"on x=-22..28,y=-29..23,z=-38..16",
-"on x=-46..7,y=-6..46,z=-50..-1",
-"on x=-49..1,y=-3..46,z=-24..28",
-"on x=2..47,y=-22..22,z=-23..27",
-"on x=-27..23,y=-28..26,z=-21..29",
-"on x=-39..5,y=-6..47,z=-3..44",
-"on x=-30..21,y=-8..43,z=-13..34",
-"on x=-22..26,y=-27..20,z=-29..19",
-"off x=-48..-32,y=26..41,z=-47..-37",
-"on x=-12..35,y=6..50,z=-50..-2",
-"off x=-48..-32,y=-32..-16,z=-15..-5",
-"on x=-18..26,y=-33..15,z=-7..46",
-"off x=-40..-22,y=-38..-28,z=23..41",
-"on x=-16..35,y=-41..10,z=-47..6",
-"off x=-32..-23,y=11..30,z=-14..3",
-"on x=-49..-5,y=-3..45,z=-29..18",
-"off x=18..30,y=-20..-8,z=-3..13",
-"on x=-41..9,y=-7..43,z=-33..15",
-"on x=-54112..-39298,y=-85059..-49293,z=-27449..7877",
-"on x=967..23432,y=45373..81175,z=27513..53682",
-    };
-    */
 
     std::vector<Cuboid> cubes;
     cubes.reserve(in.size());
@@ -116,46 +150,107 @@ answer solve_day22(input& in) {
 
     }
 
-    /*
-    int c = 0;
+    assert(cubes.size() == in.size());
+
+
+    Cuboid init_cuboid;
+    std::array<std::array<long, 2>, 3> xxx;
+    xxx[0] = {-50, 50};
+    xxx[1] = {-50, 50};
+    xxx[2] = {-50, 50};
+    init_cuboid.area = xxx;
+
+    std::vector<Cuboid> initial_cubes;
+    std::vector<Cuboid> next_cubes;
+
+    for (auto& c : cubes) {
+        if (c.intersect(init_cuboid)) {
+            Cuboid tmp = init_cuboid.get_intersection(c);
+            tmp.status = c.status;
+            tmp.id = c.id;
+            assert(tmp.volume() > 0);
+            initial_cubes.push_back(tmp);
+        }
+    }
+
+
+    for (size_t i = 0; i < initial_cubes.size()-1; ++i) {
+        for (size_t j = i+1; j < initial_cubes.size(); ++j) {
+            if (initial_cubes[i].intersect(initial_cubes[j])) {
+                if (initial_cubes[i].status == true) {
+                    auto tmp = initial_cubes[i].get_intersection(initial_cubes[j]);
+
+                    bool already_in = false;
+                    for (auto& c : initial_cubes[i].intersections) {
+                        if (c.equal(tmp)) {
+                            already_in = true;
+                            break;
+                        }
+                    }
+
+                    if (!already_in) {
+                        initial_cubes[i].intersections.push_back(tmp);
+                    }
+                }
+            }
+        }
+
+        if (initial_cubes[i].intersections.size()) {
+            initial_cubes[i].calc_intersections();
+        }
+
+    }
+
+    long vol = 0;
+
+    for (auto& c : initial_cubes) {
+        if (c.status == true) {
+            long xxx = c.volume();
+            vol += xxx;
+        }
+    }
+
+    a.part1 = std::to_string(vol);
+
+
+    // part 2
 
     for (size_t i = 0; i < cubes.size()-1; ++i) {
         for (size_t j = i+1; j < cubes.size(); ++j) {
             if (cubes[i].intersect(cubes[j])) {
-                c++;
-            }
+                if (cubes[i].status == true) {
+                    auto tmp = cubes[i].get_intersection(cubes[j]);
 
-        }
-    }
-    */
+                    bool already_in = false;
+                    for (auto& c : cubes[i].intersections) {
+                        if (c.equal(tmp)) {
+                            already_in = true;
+                            break;
+                        }
+                    }
 
-    std::vector<bool> cube_state(1e6, false);
-    assert(cube_state.size() == 1000000);
-
-    for (auto& c : cubes) {
-
-        if (c.area[0][0] > 50 || c.area[0][1] < -50) continue;
-        if (c.area[1][0] > 50 || c.area[1][1] < -50) continue;
-        if (c.area[2][0] > 50 || c.area[2][1] < -50) continue;
-
-        for (int x = c.area[0][0]; x <= c.area[0][1]; ++x) {
-            for (int y = c.area[1][0]; y <= c.area[1][1]; ++y) {
-                for (int z = c.area[2][0]; z <= c.area[2][1]; ++z) {
-                    long idx = (x + 50) * 1e4 + (y + 50) * 1e2 + (z + 50);
-
-                    if (idx < 0 || idx > 1e6) continue;
-
-                    cube_state[idx] = c.status;
+                    if (!already_in) {
+                        cubes[i].intersections.push_back(tmp);
+                    }
                 }
             }
         }
+
+        if (cubes[i].intersections.size()) {
+            cubes[i].calc_intersections();
+        }
+
     }
 
-    a.part1 = std::to_string(sum(cube_state));
+    vol = 0;
 
-    // part 2
-
-    a.part2 = std::to_string(2);
+    for (auto& c : cubes) {
+        if (c.status == true) {
+            long xxx = c.volume();
+            vol += xxx;
+        }
+    }
+    a.part2 = std::to_string(vol);
 
     return a;
 }
