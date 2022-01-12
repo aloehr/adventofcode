@@ -1,0 +1,3 @@
+[submodule "aoc_helper"]
+	path = aoc_helper
+	url = git@github.com:aloehr/aoc_helper.git
