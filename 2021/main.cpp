@@ -105,16 +105,16 @@ int main(int argc, char *args[]) {
 
 
     if (argc == 2) {
-        single_run_day = std::stoi(args[1]) - 1;
+        single_run_day = std::stoi(args[1]);
 
         if (single_run_day < 1 || single_run_day > 25)
             single_run_day = 0;
     }
 
     for (size_t i = 0; i < solutions.size(); ++i) {
-        if (single_run_day && i != single_run_day) continue;
+        if (single_run_day && i != single_run_day - 1) continue;
 
-        std::string input_file = "../../data/day" + num2str(i+1) + ".txt";
+        std::string input_file = "./data/day" + num2str(i+1) + ".txt";
         input in = read_file(input_file);
 
         result r;

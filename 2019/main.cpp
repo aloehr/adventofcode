@@ -99,7 +99,7 @@ int main(int argc, char *args[]) {
         if (single_run_day && i != single_run_day-1) continue;
 
         char filename[256];
-        std::snprintf(filename, 256, "../data/day%02lu.txt", i+1);
+        std::snprintf(filename, 256, "./data/day%02lu.txt", i+1);
         input in = read_file(std::string(filename));
 
         result r;

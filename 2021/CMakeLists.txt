@@ -2,8 +2,7 @@ cmake_minimum_required(VERSION 3.18)
 
 project(aoc2021)
 
-add_executable(
-    aoc
+set(SRC_FILES
     main.cpp
     aoc.cpp
     solutions/day01.cpp
@@ -33,5 +32,13 @@ add_executable(
     solutions/day25.cpp
 )
 
-target_compile_options(aoc PRIVATE -Wall)
-target_compile_features(aoc PRIVATE cxx_std_17)
+add_executable(
+    ${PROJECT_NAME}
+    ${SRC_FILES}
+)
+
+target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
+target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
+
+add_custom_command(TARGET ${PROJECT_NAME} POST_BUILD COMMAND ${CMAKE_COMMAND} -E
+    copy_directory ${CMAKE_CURRENT_SOURCE_DIR}/data $<TARGET_FILE_DIR:${PROJECT_NAME}>/data)

@@ -82,14 +82,12 @@ void print_results(const std::vector<result>& results) {
     // total time
     printf("%s\n", sep_line.c_str()); 
     printf("| %*.3f ms |\n", (int) (sep_line.size() - 7), 1e-6 *  total_time.count());
-    printf("%s\n", sep_line.c_str()); 
-
-    
+    printf("%s\n", sep_line.c_str());
 }
 
 int main(int argc, char *args[]) {
 
-    size_t single_run_day = 0; 
+    size_t single_run_day = 0;
     std::vector<result> results;
 
     std::vector<solve_fnc> solutions = {
@@ -111,7 +109,7 @@ int main(int argc, char *args[]) {
     for (size_t i = 0; i < solutions.size(); ++i) {
         if (single_run_day && i != single_run_day) continue;
 
-        std::string input_file = "../data/day" + num2str(i+1) + ".txt"; 
+        std::string input_file = "./data/day" + num2str(i+1) + ".txt";
         input in = read_file(input_file);
 
         result r;
@@ -121,7 +119,7 @@ int main(int argc, char *args[]) {
         r.ans = solutions[i](in);
         auto end = std::chrono::high_resolution_clock::now();
 
-        r.dur = end - start; 
+        r.dur = end - start;
 
         results.push_back(r);
     }
