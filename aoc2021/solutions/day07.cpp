@@ -7,6 +7,7 @@
 #include "../aoc.hpp"
 
 #include "aoch/string.hpp"
+#include "aoch/math.hpp"
 
 
 answer solve_day07(input& in) {
@@ -26,7 +27,7 @@ answer solve_day07(input& in) {
 
     // for p2 the minimum is at most 0.5 < avg and 0.5 > avg,
     // so we just check the 2 integers between the avg
-    float avg = (float) (sum(crab_pos)) / (float)(crab_pos.size());
+    float avg = (float) (aoch::sum(crab_pos)) / (float)(crab_pos.size());
     int avg_floored = std::ceil(avg);
     int avg_ceiled = std::floor(avg);
 

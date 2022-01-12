@@ -5,6 +5,7 @@
 #include "../aoc.hpp"
 
 #include "aoch/string.hpp"
+#include "aoch/math.hpp"
 
 
 void simulate(std::vector<long>& cur_state, int days) {
@@ -35,13 +36,13 @@ answer solve_day06(input& in) {
 
     simulate(fish_pop_state, 80);
 
-    a.part1 = std::to_string(sum(fish_pop_state));
+    a.part1 = std::to_string(aoch::sum(fish_pop_state));
 
     // part 2
 
     simulate(fish_pop_state, 256 - 80);
 
-    a.part2 = std::to_string(sum(fish_pop_state));
+    a.part2 = std::to_string(aoch::sum(fish_pop_state));
 
     return a;
 }

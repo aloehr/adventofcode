@@ -4,7 +4,6 @@ project(aoc2021)
 
 set(SRC_FILES
     main.cpp
-    aoc.cpp
     solutions/day01.cpp
     solutions/day02.cpp
     solutions/day03.cpp

@@ -5,6 +5,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/math.hpp"
+
+
 std::string calc_most_common_bits(const input& data, std::vector<bool> *filtered = nullptr) {
 
     std::string ret(data[0].size(), '0');
@@ -12,7 +15,7 @@ std::string calc_most_common_bits(const input& data, std::vector<bool> *filtered
     int max_count = data.size();
 
     if (filtered)
-        max_count -= sum(*filtered);
+        max_count -= aoch::sum(*filtered);
 
     for (size_t j = 0; j < data.size(); ++j) {
         if (filtered && (*filtered)[j]) continue;
