@@ -7,6 +7,8 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
 
 using pos_t = std::array<int, 3>;
 using rot_t = std::array<int, 3>;
@@ -174,7 +176,7 @@ answer solve_day19(input& in) {
 
         if (l[1] == '-') continue;
 
-        auto tmp = split(l, ',');
+        auto tmp = aoch::split(l, ',');
 
         std::array<int, 3> b;
 

@@ -9,6 +9,8 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
 
 struct ALU {
     enum REG { W = 0, X = 1, Y = 2, Z = 3, CONSTANT = 4, NOTHING = 5};
@@ -164,7 +166,7 @@ answer solve_day24(input& in) {
     ALU al;
 
     for (auto& l : in) {
-        auto tmp = split(l);
+        auto tmp = aoch::split(l);
 
         size_t op_code = al.op_name_op_code_mapping[tmp[0]];
 

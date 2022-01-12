@@ -4,6 +4,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 void simulate(std::vector<long>& cur_state, int days) {
 
     std::vector<long> next_state(cur_state.size());
@@ -26,7 +29,7 @@ answer solve_day06(input& in) {
 
     std::vector<long> fish_pop_state(9);
 
-    for (auto& s : split(in[0], ',')) {
+    for (auto& s : aoch::split(in[0], ',')) {
         fish_pop_state[std::stol(s)]++;
     }
 

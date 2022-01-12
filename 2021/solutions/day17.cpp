@@ -7,6 +7,8 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
 
 std::pair<bool, int> will_hit(std::array<int, 2> probe_pos, std::array<int, 2> probe_vel, const std::array<int, 2>& x_area, const std::array<int, 2>& y_area) {
 
@@ -38,7 +40,7 @@ answer solve_day17(input& in) {
 
     answer a;
 
-    auto tmp = split(in[0]);
+    auto tmp = aoch::split(in[0]);
     auto xstr = tmp[2].substr(2, tmp[2].size() - 3);
     auto ystr = tmp[3].substr(2);
 

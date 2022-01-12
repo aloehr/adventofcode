@@ -7,6 +7,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 std::tuple<long, long> min_max(const std::vector<long>& v) {
     long min = v[0];
     long max = v[0];
@@ -62,7 +65,7 @@ answer solve_day14(input& in) {
     std::unordered_map<std::string, std::array<std::string, 2>> rules;
 
     for (size_t i = 2; i < in.size(); ++i) {
-        auto tmp = split(in[i]);
+        auto tmp = aoch::split(in[i]);
 
         std::string np1 = tmp[0].substr(0, 1) + tmp[2];
         std::string np2 = tmp[2] + tmp[0].substr(1, 1);

@@ -5,6 +5,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 // counts recursively all pathes from a starting point to the end node (DFS)
 // visit_twice == false allows one small cave to be visited twice (p2)
 int count_all_pathes(
@@ -55,7 +58,7 @@ answer solve_day12(input& in) {
     int end_id = 0;
 
     for (auto& l : in) {
-        auto nodes = split(l, '-');
+        auto nodes = aoch::split(l, '-');
 
         for (const auto& n : nodes) {
             if (!node_ids.count(n)) {

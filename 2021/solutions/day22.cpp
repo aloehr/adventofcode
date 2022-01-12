@@ -8,6 +8,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 struct Cuboid {
 
     size_t id = 0;
@@ -126,18 +129,18 @@ answer solve_day22(input& in) {
     size_t next_id = 0;
 
     for (auto& l : in) {
-        auto tmp = split(l);
+        auto tmp = aoch::split(l);
         assert(tmp.size() == 2);
 
         Cuboid c;
         c.status = l[1] == 'n' ? true : false;
 
-        tmp = split(tmp[1], ',');
+        tmp = aoch::split(tmp[1], ',');
 
         assert(tmp.size() == 3);
 
         for (size_t i = 0; i < tmp.size(); ++i) {
-            auto tmp2 = split(tmp[i].substr(2), '.');
+            auto tmp2 = aoch::split(tmp[i].substr(2), '.');
 
             assert(tmp2.size() == 2);
 

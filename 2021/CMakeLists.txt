@@ -37,6 +37,8 @@ add_executable(
     ${SRC_FILES}
 )
 
+target_link_libraries(${PROJECT_NAME} aoc_helper)
+
 target_compile_options(${PROJECT_NAME} PRIVATE -Wall)
 target_compile_features(${PROJECT_NAME} PRIVATE cxx_std_17)
 

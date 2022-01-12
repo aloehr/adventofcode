@@ -6,12 +6,14 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
 
 answer solve_day21(input& in) {
     answer a;
 
-    int p1_start_pos = std::stoi(split(in[0]).back()) - 1;
-    int p2_start_pos = std::stoi(split(in[1]).back()) - 1;
+    int p1_start_pos = std::stoi(aoch::split(in[0]).back()) - 1;
+    int p2_start_pos = std::stoi(aoch::split(in[1]).back()) - 1;
 
     int dice_roll_count = 0;
     int p1_pos = p1_start_pos;

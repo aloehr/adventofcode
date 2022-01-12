@@ -4,6 +4,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 struct bingo_board {
 
     std::vector<std::vector<int>> board;
@@ -108,7 +111,7 @@ answer solve_day04(input& in) {
     std::vector<bingo_board> bingo_boards;
     std::vector<int> number_order;
 
-    for (auto& s : split(in[0], ',')) {
+    for (auto& s : aoch::split(in[0], ',')) {
         number_order.push_back(std::stoi(s));
     }
 
@@ -120,7 +123,7 @@ answer solve_day04(input& in) {
         for (unsigned int j = 0; j < 5; ++j) {
             tmp[j].clear();
 
-            for (auto& s : split(in[i + j])) {
+            for (auto& s : aoch::split(in[i + j])) {
                 tmp[j].push_back(std::stoi(s));
             }
         }

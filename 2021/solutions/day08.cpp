@@ -6,6 +6,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 bool has_chars(std::string str, std::string chars) {
     for (auto c : chars) {
         if (str.find(c) == std::string::npos)
@@ -23,9 +26,9 @@ answer solve_day08(input& in) {
     int sum = 0;
 
     for (auto& l : in) {
-        auto t = split(l, '|');
-        auto t1 = split(t[0]);
-        auto t2 = split(t[1]);
+        auto t = aoch::split(l, '|');
+        auto t1 = aoch::split(t[0]);
+        auto t2 = aoch::split(t[1]);
 
 
         for (const auto& a : t2) {

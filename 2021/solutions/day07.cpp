@@ -6,6 +6,8 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
 
 answer solve_day07(input& in) {
 
@@ -13,7 +15,7 @@ answer solve_day07(input& in) {
 
     std::vector<int> crab_pos;
 
-    for (auto& s : split(in[0], ',')) {
+    for (auto& s : aoch::split(in[0], ',')) {
         crab_pos.push_back(std::stoi(s));
     }
 

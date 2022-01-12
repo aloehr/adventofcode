@@ -6,6 +6,9 @@
 
 #include "../aoc.hpp"
 
+#include "aoch/string.hpp"
+
+
 struct line {
 
     int x1, y1;
@@ -48,12 +51,12 @@ answer solve_day05(input& in) {
     lines.reserve(in.size());
 
     for (auto& l : in) {
-        auto tmp = split(l);
+        auto tmp = aoch::split(l);
 
         assert(tmp.size() == 3);
 
-        auto line_start = split(tmp[0], ',', false);
-        auto line_end = split(tmp[2], ',', false);
+        auto line_start = aoch::split(tmp[0], ',', false);
+        auto line_end = aoch::split(tmp[2], ',', false);
 
         assert(line_start.size() == 2);
         assert(line_end.size() == 2);
