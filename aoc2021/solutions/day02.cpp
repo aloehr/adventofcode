@@ -3,11 +3,12 @@
 #include <vector>
 #include <array>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
-answer solve_day02(input& in) {
 
-    answer a;
+aoch::Result solve_day02(aoch::Input& in) {
+
+    aoch::Result a;
 
     std::vector<std::array<int, 2>> data;
     data.reserve(in.size());

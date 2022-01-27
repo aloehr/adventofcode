@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <array>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
+
 
 std::array<long, 2> calc_line_scores(const std::string& l) {
     std::vector<char> stack;
@@ -42,9 +43,9 @@ std::array<long, 2> calc_line_scores(const std::string& l) {
     return {0, score};
 }
 
-answer solve_day10(input& in) {
+aoch::Result solve_day10(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     long sum_error = 0;
     std::vector<long> compl_str_scores;

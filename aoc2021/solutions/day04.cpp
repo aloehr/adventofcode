@@ -2,8 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -25,13 +24,13 @@ struct bingo_board {
 
     void set_board(std::vector<std::vector<int>> data) {
         if (data.size() != 5) {
-            std::cout << "error while setting board: input data size wrong" << std::endl;
+            std::cout << "error while setting board: aoch::Input data size wrong" << std::endl;
             return;
         }
 
         for (const auto& line : data)  {
             if (line.size() != 5) {
-                std::cout << "error while setting board: input data size wrong" << std::endl;
+                std::cout << "error while setting board: aoch::Input data size wrong" << std::endl;
                 return;
             }
         }
@@ -104,9 +103,9 @@ struct bingo_board {
     }
 };
 
-answer solve_day04(input& in) {
+aoch::Result solve_day04(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<bingo_board> bingo_boards;
     std::vector<int> number_order;

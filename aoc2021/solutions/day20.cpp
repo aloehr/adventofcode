@@ -2,7 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
 
 using img_t = std::vector<std::string>;
@@ -27,9 +27,9 @@ img_t enhance(const img_t& img, std::string iaa, char border) {
     return ret;
 }
 
-answer solve_day20(input& in) {
+aoch::Result solve_day20(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::string& iaa = in[0];
 

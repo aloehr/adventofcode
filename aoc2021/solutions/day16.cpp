@@ -5,7 +5,7 @@
 #include <cassert>
 #include <map>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
 
 struct packet {
@@ -158,9 +158,9 @@ packet parse_packet(const std::string& d) {
     return parse_packet(d, idx);
 }
 
-answer solve_day16(input& in) {
+aoch::Result solve_day16(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::map<char, std::string> dict = {
         {'0', "0000"},

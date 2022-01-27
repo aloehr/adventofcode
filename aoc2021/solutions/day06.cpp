@@ -2,8 +2,7 @@
 #include <string>
 #include <vector>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 #include "aoch/math.hpp"
 
@@ -24,9 +23,9 @@ void simulate(std::vector<long>& cur_state, int days) {
     }
 }
 
-answer solve_day06(input& in) {
+aoch::Result solve_day06(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<long> fish_pop_state(9);
 

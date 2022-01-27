@@ -5,15 +5,15 @@
 #include <limits>
 #include <queue>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
 
-// resizes input according to p2 requirements
-input resize(const input& in) {
+// resizes aoch::Input according to p2 requirements
+aoch::Input resize(const aoch::Input& in) {
     size_t h = in.size();
     size_t w = in[0].size();
 
-    input ret(h * 5, std::string(w*5, '0'));
+    aoch::Input ret(h * 5, std::string(w*5, '0'));
 
     for (size_t i = 0; i < 5; ++i) {
         for (size_t j = 0; j < 5; ++j) {
@@ -42,7 +42,7 @@ std::vector<std::array<size_t, 2>> neighbours(const std::array<size_t, 2>& pos, 
 }
 
 // simple dikstra algo with priority queue
-int dikstra(const input& rel_d) {
+int dikstra(const aoch::Input& rel_d) {
     size_t h = rel_d.size();
     size_t w = rel_d[0].size();
 
@@ -76,9 +76,9 @@ int dikstra(const input& rel_d) {
     return abs_d.back();
 }
 
-answer solve_day15(input& in) {
+aoch::Result solve_day15(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     a.part1 = std::to_string(dikstra(in));
 

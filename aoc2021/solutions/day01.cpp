@@ -2,12 +2,12 @@
 #include <string>
 #include <vector>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
 
-answer solve_day01(input& in) {
+aoch::Result solve_day01(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<int> data;
     data.reserve(in.size());

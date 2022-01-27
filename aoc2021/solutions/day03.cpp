@@ -3,12 +3,11 @@
 #include <vector>
 #include <cassert>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/math.hpp"
 
 
-std::string calc_most_common_bits(const input& data, std::vector<bool> *filtered = nullptr) {
+std::string calc_most_common_bits(const aoch::Input& data, std::vector<bool> *filtered = nullptr) {
 
     std::string ret(data[0].size(), '0');
     std::vector<int> one_count(data[0].size(), 0);
@@ -37,7 +36,7 @@ std::string calc_most_common_bits(const input& data, std::vector<bool> *filtered
 
 
 
-int bit_criteria_filter(const input& data, bool most_common_bit = true) {
+int bit_criteria_filter(const aoch::Input& data, bool most_common_bit = true) {
 
     std::vector<bool> filtered(data.size(), false);
     int unfiltered_count = filtered.size();
@@ -76,9 +75,9 @@ int bit_criteria_filter(const input& data, bool most_common_bit = true) {
     return std::stoi(data[i], nullptr, 2);
 }
 
-answer solve_day03(input& in) {
+aoch::Result solve_day03(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::string gamma_rate_str = calc_most_common_bits(in);
     std::string epsilon_rate_str(gamma_rate_str.size(), '0');

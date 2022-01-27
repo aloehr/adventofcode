@@ -7,8 +7,7 @@
 #include <tuple>
 #include <cassert>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -160,9 +159,9 @@ struct ALU {
     }
 };
 
-answer solve_day24(input& in) {
+aoch::Result solve_day24(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
     ALU al;
 
     for (auto& l : in) {

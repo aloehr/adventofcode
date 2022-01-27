@@ -5,8 +5,7 @@
 #include <sstream>
 #include <tuple>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -55,9 +54,9 @@ void transform(
     }
 }
 
-answer solve_day14(input& in) {
+aoch::Result solve_day14(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::unordered_map<std::string, long> pairs_quantity;
     std::vector<long> chars_quantity(26);

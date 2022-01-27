@@ -4,15 +4,14 @@
 #include <algorithm>
 #include <cmath>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 #include "aoch/math.hpp"
 
 
-answer solve_day07(input& in) {
+aoch::Result solve_day07(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<int> crab_pos;
 

@@ -4,8 +4,7 @@
 #include <algorithm>
 #include <map>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -18,9 +17,9 @@ bool has_chars(std::string str, std::string chars) {
     return true;
 }
 
-answer solve_day08(input& in) {
+aoch::Result solve_day08(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     int count = 0;
     int sum = 0;

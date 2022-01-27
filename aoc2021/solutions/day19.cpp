@@ -5,8 +5,7 @@
 #include <array>
 #include <set>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -155,8 +154,8 @@ bool match_scanners(const scanner& a, scanner& b) {
     return false;
 }
 
-answer solve_day19(input& in) {
-    answer a;
+aoch::Result solve_day19(aoch::Input& in) {
+    aoch::Result a;
 
     // actually this time we need an extra empty line at the end
     in.push_back("");

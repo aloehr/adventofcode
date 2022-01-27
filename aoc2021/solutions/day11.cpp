@@ -4,7 +4,8 @@
 #include <algorithm>
 #include <array>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
+
 
 void update_flash(std::vector<std::vector<int>>& d, size_t i, size_t j) {
 
@@ -81,9 +82,9 @@ std::array<int, 2> step(std::vector<std::vector<int>>& d, int steps, bool p2 = f
 }
 
 
-answer solve_day11(input& in) {
+aoch::Result solve_day11(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<std::vector<int>> op_el(in.size());
 

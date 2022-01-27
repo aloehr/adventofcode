@@ -6,8 +6,7 @@
 #include <cassert>
 #include <set>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -119,9 +118,9 @@ struct Cuboid {
     }
 };
 
-answer solve_day22(input& in) {
+aoch::Result solve_day22(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<Cuboid> cubes;
     cubes.reserve(in.size());

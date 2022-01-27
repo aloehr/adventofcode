@@ -5,9 +5,10 @@
 #include <array>
 #include <set>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
-int calc_basin_size(input& data, size_t y, size_t x, bool init = true) {
+
+int calc_basin_size(aoch::Input& data, size_t y, size_t x, bool init = true) {
 
     static std::set<std::array<size_t, 2>> visited;
     if (init) visited.clear();
@@ -32,9 +33,9 @@ int calc_basin_size(input& data, size_t y, size_t x, bool init = true) {
              + calc_basin_size(data, y, x-1, false);
 }
 
-answer solve_day09(input& in) {
+aoch::Result solve_day09(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     int risk_level = 0;
     std::vector<std::array<size_t, 2>> low_points;

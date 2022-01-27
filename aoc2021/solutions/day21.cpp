@@ -4,13 +4,12 @@
 #include <array>
 #include <map>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
-answer solve_day21(input& in) {
-    answer a;
+aoch::Result solve_day21(aoch::Input& in) {
+    aoch::Result a;
 
     int p1_start_pos = std::stoi(aoch::split(in[0]).back()) - 1;
     int p2_start_pos = std::stoi(aoch::split(in[1]).back()) - 1;

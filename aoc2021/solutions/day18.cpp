@@ -4,7 +4,7 @@
 #include <vector>
 #include <cassert>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
 
 struct SnailNumber {
@@ -307,9 +307,9 @@ struct SnailNumber {
     }
 };
 
-answer solve_day18(input& in) {
+aoch::Result solve_day18(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<SnailNumber> sns;
     sns.reserve(in.size());

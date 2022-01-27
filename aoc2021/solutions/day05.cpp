@@ -4,8 +4,7 @@
 #include <vector>
 #include <algorithm>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -43,9 +42,9 @@ std::pair<int, int> find_max_coords(const std::vector<line>& lines) {
     return ret;
 }
 
-answer solve_day05(input& in) {
+aoch::Result solve_day05(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::vector<line> lines;
     lines.reserve(in.size());

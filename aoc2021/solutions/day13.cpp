@@ -4,7 +4,8 @@
 #include <array>
 #include <set>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
+
 
 size_t fold_count(
     const std::array<int, 2>& fl,
@@ -47,9 +48,9 @@ std::set<std::array<int, 2>> fold(
     return ret;
 }
 
-answer solve_day13(input& in) {
+aoch::Result solve_day13(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::set<std::array<int, 2>> dots;
     std::vector<std::array<int, 2>> fold_lines;

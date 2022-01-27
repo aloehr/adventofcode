@@ -6,7 +6,7 @@
 #include <tuple>
 #include <array>
 
-#include "../aoc.hpp"
+#include "aoch/AOCSolutionTypes.hpp"
 
 
 int cps(const char c) {
@@ -160,9 +160,9 @@ std::tuple<int, bool> bruteforce(std::string& h, std::vector<std::string>& rs, i
     return std::make_tuple(lowest_cost, lowest_cost != -1);
 }
 
-answer solve_day23(input& in) {
+aoch::Result solve_day23(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::string hallway(in[1].size() - 2, '.');
     std::vector<std::string> rooms(4, "..");

@@ -5,8 +5,7 @@
 #include <cmath>
 #include <tuple>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -36,9 +35,9 @@ std::pair<bool, int> will_hit(std::array<int, 2> probe_pos, std::array<int, 2> p
     return std::make_pair(false, 0);
 }
 
-answer solve_day17(input& in) {
+aoch::Result solve_day17(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     auto tmp = aoch::split(in[0]);
     auto xstr = tmp[2].substr(2, tmp[2].size() - 3);

@@ -3,8 +3,7 @@
 #include <vector>
 #include <map>
 
-#include "../aoc.hpp"
-
+#include "aoch/AOCSolutionTypes.hpp"
 #include "aoch/string.hpp"
 
 
@@ -43,9 +42,9 @@ int count_all_pathes(
     return path_count;
 }
 
-answer solve_day12(input& in) {
+aoch::Result solve_day12(aoch::Input& in) {
 
-    answer a;
+    aoch::Result a;
 
     std::map<std::string, int> node_ids;
     std::vector<bool> node_small_cave;
