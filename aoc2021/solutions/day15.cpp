@@ -41,34 +41,44 @@ std::vector<std::array<size_t, 2>> neighbours(const std::array<size_t, 2>& pos, 
     return ret;
 }
 
-// simple dikstra algo with priority queue
-int dikstra(const aoch::Input& rel_d) {
+// simple dijkstra algo with priority queue
+int dijkstra(const aoch::Input& rel_d) {
     size_t h = rel_d.size();
     size_t w = rel_d[0].size();
 
-    int inf = std::numeric_limits<int>::max();
+    const int inf = std::numeric_limits<int>::max();
 
     std::vector<int> abs_d(h * w, inf);
-    abs_d[0] = 0;
+    std::vector<int> tentative_d(h * w, inf);
 
     auto cmp = [&] (const size_t a, const size_t b) {
-        return abs_d[a] > abs_d[b];
+        return tentative_d[a] > tentative_d[b];
     };
 
-    std::priority_queue<size_t, std::vector<size_t>, decltype(cmp)> q(cmp);
-    q.push(0);
+    std::priority_queue<size_t, std::vector<size_t>, decltype(cmp)> front(cmp);
 
-    while (q.size()) {
+    tentative_d[0] = 0;
+    front.push(0);
 
-        auto u = q.top();
-        q.pop();
+    while (front.size()) {
 
-        for (const auto& v : neighbours({u/w, u%w}, h, w)) {
-            size_t tmp = v[0] * w + v[1];
+        // because this priority queue doesn't have an update function we can get double entries, so we skip nodes for which we already
+        // calculated the absolute distance.
+        while (abs_d[front.top()] != inf) front.pop();
+        auto u = front.top();
+        front.pop();
+        abs_d[u] = tentative_d[u];
 
-            if (abs_d[tmp] == inf) {
-                abs_d[tmp] = abs_d[u] + rel_d[v[0]][v[1]] - '0';
-                q.push(tmp);
+        for (const auto& nb : neighbours({u/w, u%w}, h, w)) {
+            size_t nb_idx = nb[0] * w + nb[1];
+
+            if (abs_d[nb_idx] == inf) {
+                int distance_through_u = abs_d[u] + rel_d[nb[0]][nb[1]] - '0';
+
+                if (distance_through_u < tentative_d[nb_idx]) {
+                    tentative_d[nb_idx] = distance_through_u;
+                    front.push(nb_idx);
+                }
             }
         }
     }
@@ -80,10 +90,8 @@ aoch::Result solve_day15(aoch::Input& in) {
 
     aoch::Result a;
 
-    a.part1 = std::to_string(dikstra(in));
-
-    // part 2
-    a.part2 = std::to_string(dikstra(resize(in)));
+    a.part1 = std::to_string(dijkstra(in));
+    a.part2 = std::to_string(dijkstra(resize(in)));
 
     return a;
 }
