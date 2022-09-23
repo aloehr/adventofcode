@@ -1,20 +1,20 @@
 #include <array>
 #include <cassert>
+#include <cstdio>
 #include <iostream>
 #include <string>
 
 #include "aoch/AOCSolutionTypes.hpp"
 
-unsigned int left_rotate(unsigned int x, unsigned int times) {
+
+using uint = unsigned int;
+
+uint left_rotate(const uint x, const uint times) {
     return (x << times) | (x >> (32 - times));
 }
 
-unsigned int switch_endian(unsigned int x) {
-    return (x << 24) | ((x & 0x0000FF00) << 8) | ((x & 0x00FF0000) >> 8) | (x >> 24);
-}
-std::string md5_single_block(const std::string& msg) {
+bool md5_single_block(const std::string& msg, const uint mask) {
 
-    using uint = unsigned int;
 
     const std::array<uint, 64> s = {
         7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,  7, 12, 17, 22,
@@ -51,25 +51,23 @@ std::string md5_single_block(const std::string& msg) {
 
     // since we do only a single block we can't process more than 55 bytes
     assert(msg.size() < 56);
+
     std::array<unsigned char, 64> msg_internal;
+    msg_internal.fill(0);
 
     for (size_t i = 0; i < msg.size(); ++i) {
-        msg_internal[i] = (unsigned char) msg[i];
+        msg_internal[i] = static_cast<unsigned char>(msg[i]);
     }
 
     msg_internal[msg.size()] = 0x80;
 
-    for (size_t i = msg.size() + 1; i < msg_internal.size(); ++i) {
-        msg_internal[i] = 0;
-    }
-
-    long *length_ptr =(long *) (msg_internal.data() + 56);
+    long *length_ptr = reinterpret_cast<long *>(msg_internal.data() + 56);
     *length_ptr = msg.size() * 8;
 
     std::array<uint, 16> M;
 
     for (size_t i = 0; i < M.size(); ++i) {
-        M[i] = *((uint *) (msg_internal.data() + 4*i));
+        M[i] = msg_internal[i*4 +3] << 24 | msg_internal[i*4 + 2] << 16 | msg_internal[i*4 + 1] << 8 | msg_internal[i*4 + 0];
     }
 
     uint A = a0;
@@ -106,54 +104,34 @@ std::string md5_single_block(const std::string& msg) {
     c0 = c0 + C;
     d0 = d0 + D;
 
-    std::array<char, 33> digest;
-    snprintf(digest.data(), 33, "%08x%08x%08x%08x", switch_endian(a0), switch_endian(b0), switch_endian(c0), switch_endian(d0));
-
-    return std::string(digest.data());
-}
-
-bool has_n_leading_zeros(const std::string& str, const unsigned int n) {
-    for (size_t i = 0; i < n; ++i ) {
-        if (str[i] != '0') {
-            return false;
-        }
-    }
-
-    return true;
+    return (a0 & mask) == 0;
 }
 
 aoch::Result solve_day04(aoch::Input& in) {
     aoch::Result r;
 
     bool found_valid_hash = false;
-    int n = 1;
+    uint n = 1;
+
+    const uint mask_five_zeros = 0x00F0FFFF;
+    const uint mask_six_zeros = 0x00FFFFFF;
 
     while (!found_valid_hash) {
-        std::string secret = in[0] + std::to_string(n);
-        std::string md5_hash = md5_single_block(secret);
-        if (has_n_leading_zeros(md5_hash, 5)) {
-            found_valid_hash = true;
-        } else {
-            n++;
-        }
+        std::string secret = in[0] + std::to_string(n++);
+        found_valid_hash = md5_single_block(secret, mask_five_zeros);
     }
 
-    r.part1 = std::to_string(n);
+    r.part1 = std::to_string(--n);
 
     // part 2
     found_valid_hash = false;
 
     while (!found_valid_hash) {
-        std::string secret = in[0] + std::to_string(n);
-        std::string md5_hash = md5_single_block(secret);
-        if (has_n_leading_zeros(md5_hash, 6)) {
-            found_valid_hash = true;
-        } else {
-            n++;
-        }
+        std::string secret = in[0] + std::to_string(n++);
+        found_valid_hash= md5_single_block(secret, mask_six_zeros);
     }
 
-    r.part2 = std::to_string(n);
+    r.part2 = std::to_string(--n);
 
     return r;
 }
