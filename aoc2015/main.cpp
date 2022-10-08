@@ -35,7 +35,7 @@ int main(int argc, char *args[]) {
     DECL_AND_ADD_SOLUTION(solve_day22, solutions)
     DECL_AND_ADD_SOLUTION(solve_day23, solutions)
     DECL_AND_ADD_SOLUTION(solve_day24, solutions)
-    //DECL_AND_ADD_SOLUTION(solve_day25, solutions)
+    DECL_AND_ADD_SOLUTION(solve_day25, solutions)
 
     size_t run_single_day = 0;
 
