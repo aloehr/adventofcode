@@ -13,7 +13,7 @@ int main(int argc, char *args[]) {
 
     DECL_AND_ADD_SOLUTION(solve_day01, solutions)
     DECL_AND_ADD_SOLUTION(solve_day02, solutions)
-    //DECL_AND_ADD_SOLUTION(solve_day03, solutions)
+    DECL_AND_ADD_SOLUTION(solve_day03, solutions)
     //DECL_AND_ADD_SOLUTION(solve_day04, solutions)
     //DECL_AND_ADD_SOLUTION(solve_day05, solutions)
     //DECL_AND_ADD_SOLUTION(solve_day06, solutions)
