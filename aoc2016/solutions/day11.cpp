@@ -26,6 +26,7 @@ struct State {
     int steps;
     int heuristic;
 
+    // this should be a consistent heuristic
     void update_heuristic() {
         heuristic = steps;
 
@@ -37,22 +38,37 @@ struct State {
                 }
             }
 
-            if (item_count && i == 0) {
-                heuristic += elevator;
+            if (item_count && i < elevator) {
+                heuristic += 1;
             }
 
             if (item_count) {
-                heuristic += item_count < 3 ? 1 : (item_count + 1) / 2 * 2 - 1;
+                heuristic += item_count < 3 ? 1 : 3 + (item_count - 3) * 2;
             }
         }
     }
 
+    // we want the smallest item on top of the pq and not the biggest
     bool operator<(const State& o) const {
         return heuristic > o.heuristic;
     }
 };
 
 bool is_valid_state(const State& s) {
+
+    // the elevator needs at least one item on his floor so he can operate.
+    // (this should actually never happen unless it is in the initial state because on next state creation
+    // we always move at least one item with us)
+    bool elevator_floor_empty = true;
+    for (const auto& i : s.items) {
+        if (i.floor == s.elevator) {
+            elevator_floor_empty = false;
+            break;
+        }
+    }
+
+    if (elevator_floor_empty) return false;
+
     for (const auto& i : s.items) {
         if (i.t == ItemType::CHIP) {
             bool chip_ok = false;
@@ -70,7 +86,8 @@ bool is_valid_state(const State& s) {
 
             if (chip_ok) continue;
 
-            // 2. there is no gen on this floor
+            // 2. the current chip's generator counterpart is not on this floor, so
+            // there better be no other gen on this floor or otherwise this state is invalid.
             for (const auto& i2 : s.items) {
                 if (i2.t == ItemType::GEN && i2.floor == i.floor) {
                     return false;
@@ -82,6 +99,9 @@ bool is_valid_state(const State& s) {
     return true;
 }
 
+// Because gen, chip pairs are all exchangable and you will still have the same state in terms of distance to
+// the end state, the hash makes sure that even with any combination of swapped pairs your get the same hash.
+// This is probably the most important optimization for this problem.
 std::string hash_state(const State& s) {
     std::vector<std::pair<size_t, std::vector<size_t>>> pair_pos(s.items.size() / 2);
 
@@ -178,6 +198,7 @@ bool is_end_state(const State& s, size_t last_floor) {
     return true;
 }
 
+// a* search with pruning, the heuristic is consistent
 int solve(State init_state, size_t last_floor, int steps = 0) {
     static std::unordered_set<std::string> mem;
 
@@ -191,32 +212,25 @@ int solve(State init_state, size_t last_floor, int steps = 0) {
     std::priority_queue<State> pq;
     pq.push(init_state);
 
-    int best_steps = -1;
-
     while (pq.size()) {
         auto s = pq.top();
         pq.pop();
 
-        if (best_steps >= 0 && s.heuristic >= best_steps) {
-            return best_steps;
-        }
-
         if (is_end_state(s, last_floor)) {
-            if (best_steps < 0 || (best_steps >= 0 && s.steps < best_steps)) {
-                best_steps = s.steps;
-                continue;
-            }
+            return s.steps;
         }
 
         s.steps++;
         for (int m = 1; m >= -1; m -= 2) {
+
+            // can't move below first floor or above last floor
             if ((m ==  1 && s.elevator == last_floor) ||
                 (m == -1 && s.elevator == 0)) {
                 continue;
             }
 
+            // don't move down if all floors below you are empty
             if (m == -1) {
-
                 bool all_floors_below_empty = true;
                 for (const auto& it : s.items) {
                     if (it.floor < s.elevator) {
@@ -228,12 +242,13 @@ int solve(State init_state, size_t last_floor, int steps = 0) {
                 if (all_floors_below_empty) continue;
             }
 
-
             for (size_t i = 0; i < s.items.size(); ++i) {
                 if (s.items[i].floor != s.elevator) continue;
 
                 for (size_t j = i+1; j <= s.items.size(); ++j) {
                     if (j < s.items.size() && s.items[j].floor != s.elevator) continue;
+
+                    // don't move 2 items back down, only 1
                     if (j < s.items.size() && m == -1) continue;
 
                     s.items[i].floor += m;
@@ -264,7 +279,7 @@ int solve(State init_state, size_t last_floor, int steps = 0) {
         }
     }
 
-    return best_steps;
+    return -1;
 }
 
 aoch::Result solve_day11(aoch::Input& in) {
