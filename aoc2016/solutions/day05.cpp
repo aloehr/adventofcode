@@ -16,6 +16,25 @@ uint switch_endian(const uint n) {
            (n >> 24 & 0x000000FF);
 }
 
+static void byte_to_hex(char byte, std::array<char, 33>& buf, size_t p) {
+    std::array<char, 16> convert {'0', '1', '2', '3', '4', '5', '6', '7',
+                            '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+
+    buf[p] = convert[(byte >> 4) & 0xF];
+    buf[p+1] = convert[byte & 0xF];
+}
+
+static void md5_to_char(uint a, uint b, uint c, uint d, std::array<char, 33>& buf) {
+    for (size_t i = 0; i < 4; ++i) {
+        byte_to_hex((a >> i*8) & 0xFF, buf, 2*i);
+        byte_to_hex((b >> i*8) & 0xFF, buf, 8 + 2*i);
+        byte_to_hex((c >> i*8) & 0xFF, buf, 16 + 2*i);
+        byte_to_hex((d >> i*8) & 0xFF, buf, 24 + 2*i);
+    }
+
+    buf[32] = '\0';
+}
+
 uint left_rotate(const uint x, const uint times) {
     return (x << times) | (x >> (32 - times));
 }
@@ -112,15 +131,7 @@ bool md5_single_block(const std::string& msg, std::array<char, 33>& out) {
     d0 = d0 + D;
 
     if ((a0 & 0x00F0FFFF) == 0) {
-        std::snprintf(
-            out.data(),
-            33,
-            "%08x%08x%08x%08x",
-            switch_endian(a0),
-            switch_endian(b0),
-            switch_endian(c0),
-            switch_endian(d0)
-        );
+        md5_to_char(a0, b0, c0, d0, out);
 
         return true;
     }
