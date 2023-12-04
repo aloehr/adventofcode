@@ -6,54 +6,35 @@
 
 #include "aoch/AOCSolutionTypes.hpp"
 
+
+using Position = std::array<uint, 2>;
+using Delta = std::array<int, 2>;
+
 static bool is_digit(char x) {
     return x >= '0' && x <= '9';
 }
 
-bool has_pos_adjacent_symbol(std::vector<std::string> map, std::array<uint, 2> pos) {
+bool is_inbound(const std::vector<std::string>& map, const Position& pos, const Delta& dt) {
+    if (dt[0] < 0 && pos[0] == 0) return false;
+    if (pos[0] + dt[0] >= map.size()) return false;
 
-    char cur;
+    if (dt[1] < 0 && pos[1] == 0) return false;
+    if (pos[1] + dt[1] >= map[pos[0] + dt[0]].size()) return false;
 
-    // row above
-    if (pos[1] > 0) {
-        if (pos[0] > 0) {
-            cur = map[pos[1] - 1][pos[0] - 1];
-            if (!is_digit(cur) && cur != '.') return true;
-        }
+    return true;
+}
 
-        cur = map[pos[1] - 1][pos[0]];
-        if (!is_digit(cur) && cur != '.') return true;
+bool has_pos_adjacent_symbol(const std::vector<std::string>& map, const Position& pos) {
 
-        if (pos[0] < map[pos[1]].size() - 1) {
-            cur = map[pos[1] - 1][pos[0] + 1];
-            if (!is_digit(cur) && cur != '.') return true;
-        }
-    }
+    const std::vector<Delta> dirs { {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 
-    // cur row
-    if (pos[0] > 0) {
-        cur = map[pos[1]][pos[0] - 1];
-        if (!is_digit(cur) && cur != '.') return true;
-    }
+    for (const auto& dt : dirs) {
+        if (is_inbound(map, pos, dt)) {
+            Position cur_pos {pos[0] + dt[0], pos[1] + dt[1]};
 
-    if (pos[0] < map[pos[1]].size() - 1) {
-        cur = map[pos[1]][pos[0] + 1];
-        if (!is_digit(cur) && cur != '.') return true;
-    }
+            char cur_char = map[cur_pos[1]][cur_pos[0]];
 
-    // row below above
-    if (pos[1] < map.size() - 1) {
-        if (pos[0] > 0) {
-            cur = map[pos[1] + 1][pos[0] - 1];
-            if (!is_digit(cur) && cur != '.') return true;
-        }
-
-        cur = map[pos[1] + 1][pos[0]];
-        if (!is_digit(cur) && cur != '.') return true;
-
-        if (pos[0] < map[pos[1]].size() - 1) {
-            cur = map[pos[1] + 1][pos[0] + 1];
-            if (!is_digit(cur) && cur != '.') return true;
+            if (!is_digit(cur_char) && cur_char != '.') return true;
         }
     }
 
@@ -67,12 +48,12 @@ aoch::Result solve_day03(aoch::Input& in) {
     uint sum = 0;
 
     std::map<std::string, uint> id_to_number;
-    std::map<std::array<uint, 2>, std::string> pos_to_id;
+    std::map<Position, std::string> pos_to_id;
 
     for (uint y = 0; y < in.size(); ++y) {
 
         bool found_symbol_for_current_number = false;
-        std::vector<std::array<uint, 2>> number_positions;
+        std::vector<Position> number_positions;
         std::string pos_str = "";
         std::string cur_number = "";
         for (uint x = 0; x < in[y].size(); ++x) {
@@ -136,38 +117,24 @@ aoch::Result solve_day03(aoch::Input& in) {
             if (in[y][x] == '*') {
                 std::set<std::string> number_ids;
 
-                std::array<uint, 2> cur_pos = {x-1, y-1};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
+                const std::vector<Delta> dirs { {-1, -1}, {0, -1}, {1, -1}, {-1, 0}, {1, 0}, {-1, 1}, {0, 1}, {1, 1} };
 
-                cur_pos = {x, y-1};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
+                for (const auto& dir : dirs) {
+                    Position cur_pos = {x + dir[0], y + dir[1]};
 
-                cur_pos = {x+1, y-1};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
-
-                cur_pos = {x-1, y};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
-
-                cur_pos = {x+1, y};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
-
-                cur_pos = {x-1, y+1};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
-
-                cur_pos = {x, y+1};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
-
-                cur_pos = {x+1, y+1};
-                if (pos_to_id.count(cur_pos)) number_ids.insert(pos_to_id[cur_pos]);
+                    if (pos_to_id.count(cur_pos)) {
+                        number_ids.insert(pos_to_id[cur_pos]);
+                    }
+                }
 
                 if (number_ids.size() == 2) {
-                    uint tmp = 1;
+                    uint ratio = 1;
 
                     for (const auto& id : number_ids) {
-                        tmp *= id_to_number[id];
+                        ratio *= id_to_number[id];
                     }
 
-                    sum += tmp;
+                    sum += ratio;
                 }
             }
         }
