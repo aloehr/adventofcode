@@ -12,8 +12,8 @@ long long calc(double total_time, double record_distance) {
 
     double sqrt_result = std::sqrt(total_time_halved * total_time_halved - record_distance);
 
-    long long min_time_for_win = std::ceil(total_time_halved - sqrt_result);
-    long long max_time_for_win = std::floor(total_time_halved + sqrt_result);
+    long long min_time_for_win = std::floor(total_time_halved - sqrt_result + 1);
+    long long max_time_for_win = std::ceil(total_time_halved + sqrt_result - 1);
 
     return max_time_for_win - min_time_for_win + 1;
 }
