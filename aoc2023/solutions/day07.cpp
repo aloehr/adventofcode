@@ -13,7 +13,6 @@ struct Hand {
 
     static std::map<HAND_TYPE, std::string> HAND_TYPE_STRINGS;
     static std::map<char, int> CARD_STRENGTH;
-    static int c;
 
     std::string cards;
     int bid_amount;
@@ -31,8 +30,6 @@ struct Hand {
 
 
     Hand(const std::string& cards, int bid_amount, bool use_jokers = false) : cards(cards), bid_amount(bid_amount), use_jokers(use_jokers){
-        c++;
-
         this->type = this->determine_hand_type();
     }
 
@@ -126,8 +123,6 @@ struct Hand {
 
     }
 };
-
-int Hand::c = 0;
 
 std::map<Hand::HAND_TYPE, std::string> Hand::HAND_TYPE_STRINGS {
     {FIVE_OF_A_KIND, "FIVE_OF_A_KIND"},
