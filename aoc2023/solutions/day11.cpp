@@ -1,94 +1,67 @@
-#include <array>
+#include <numeric>
 #include <iostream>
-#include <map>
-#include <set>
 #include <string>
 #include <vector>
 
 #include "aoch/AOCSolutionTypes.hpp"
 
 
-using Pos = std::array<int, 2>;
+long long calc_distances(const std::vector<unsigned int>& coords, unsigned int expansion_factor = 2) {
+    long long sum = 0;
 
-int distance(const Pos& g1, const Pos& g2, const std::set<size_t>& expanded_rows, const std::set<size_t>& expanded_columns, unsigned int expansion_factor = 2) {
-    static std::map<Pos, int> expansion_columns_cache;
-    static std::map<Pos, int> expansion_rows_cache;
+    unsigned int visited_galaxies_count = 0;
+    unsigned int unvisited_galaxies_count = std::accumulate(coords.cbegin(), coords.cend(), 0);
+    unsigned int cur_expansions_count = 0;
 
-
-    Pos sorted_column_idxs = {std::min(g1[0], g2[0]), std::max(g1[0], g2[0])};
-    if (!expansion_columns_cache.count(sorted_column_idxs)) {
-        int expanded_columns_count = 0;
-        for (int x = sorted_column_idxs[0] + 1; x < sorted_column_idxs[1]; ++x) {
-            if (expanded_columns.count(x)) expanded_columns_count++;
-        }
-
-        expansion_columns_cache[sorted_column_idxs] = expanded_columns_count;
+    // find the first coord with galaxies as the start of our algorithm
+    size_t cur_coord = 0;
+    while (cur_coord < coords.size() && coords[cur_coord] == 0) {
+        cur_coord++;
     }
 
-    int expanded_jumps_count = expansion_columns_cache[sorted_column_idxs];
+    for (size_t next_coord = cur_coord + 1; next_coord < coords.size(); ++next_coord) {
 
-
-    Pos sorted_row_idxs = {std::min(g1[1], g2[1]), std::max(g1[1], g2[1])};
-    if (!expansion_rows_cache.count(sorted_row_idxs)) {
-        int expanded_rows_count = 0;
-        for (int y = sorted_row_idxs[0] + 1; y < sorted_row_idxs[1]; ++y) {
-            if (expanded_rows.count(y)) expanded_rows_count++;
+        // this means there were no galaxie in the row/column, so increase the expansion_count by 1 for this cooord
+        if (coords[next_coord] == 0) {
+            cur_expansions_count++;
+            continue;
         }
 
-        expansion_rows_cache[sorted_row_idxs] = expanded_rows_count;
+        // adjust visited / unvisited galaxies counts
+        visited_galaxies_count += coords[cur_coord];
+        unvisited_galaxies_count -= coords[cur_coord];
+
+        // visited_galaxies_count * unvisited_galaxies_count is the amount the segment between cur_coord and next_coord
+        // needs to be added to the sum
+        sum += visited_galaxies_count * unvisited_galaxies_count * (next_coord - cur_coord + cur_expansions_count * (expansion_factor - 1));
+
+        cur_coord = next_coord;
+        cur_expansions_count = 0;
     }
 
-    expanded_jumps_count += expansion_rows_cache[sorted_row_idxs];
-
-    return std::abs(g1[0] - g2[0]) + std::abs(g1[1] - g2[1]) + expanded_jumps_count * (expansion_factor - 1);
+    return sum;
 }
 
 aoch::Result solve_day11(aoch::Input& in) {
-
     aoch::Result a;
 
-    std::vector<Pos> galaxies;
-    std::set<size_t> expanded_rows;
-    std::set<size_t> expanded_columns;
+    std::vector<unsigned int> galaxies_x_coords(in[0].size(), 0);
+    std::vector<unsigned int> galaxies_y_coords(in.size(), 0);
 
     for (size_t y = 0; y < in.size(); ++y) {
-        bool found_galaxie_in_row = false;
-
         for (size_t x = 0; x < in[y].size(); ++x) {
             if (in[y][x] == '#') {
-                found_galaxie_in_row = true;
-                galaxies.push_back({static_cast<int>(x), static_cast<int>(y)});
+                galaxies_x_coords[x]++;
+                galaxies_y_coords[y]++;
             }
         }
-
-        if (!found_galaxie_in_row) {
-            expanded_rows.insert(y);
-        }
     }
 
-    for (size_t x = 0; x < in[0].size(); ++x) {
-        bool found_galaxie_in_column = false;
+    long long sum1 = calc_distances(galaxies_x_coords);
+    sum1 += calc_distances(galaxies_y_coords);
 
-        for (size_t y = 0; y < in.size(); ++y) {
-            if (in[y][x] == '#') {
-                 found_galaxie_in_column= true;
-            }
-        }
-
-        if (!found_galaxie_in_column) {
-            expanded_columns.insert(x);
-        }
-    }
-
-    int sum1 = 0;
-    long long sum2 = 0;
-
-    for (size_t i = 0; i < galaxies.size() - 1; ++i) {
-        for (size_t j = i+1; j < galaxies.size(); ++j) {
-            sum1 += distance(galaxies[i], galaxies[j], expanded_rows, expanded_columns);
-            sum2 += distance(galaxies[i], galaxies[j], expanded_rows, expanded_columns, 1000000);
-        }
-    }
+    long long sum2 = calc_distances(galaxies_x_coords, 1e6);
+    sum2 += calc_distances(galaxies_y_coords, 1e6);
 
     a.part1 = std::to_string(sum1);
     a.part2 = std::to_string(sum2);
