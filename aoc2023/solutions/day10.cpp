@@ -2,7 +2,6 @@
 #include <array>
 #include <iostream>
 #include <map>
-#include <set>
 #include <string>
 
 #include "aoch/AOCSolutionTypes.hpp"
@@ -46,11 +45,11 @@ bool is_connected(char pipe, const Pos& x1, const Pos& x2) {
     return false;
 }
 
-bool traverse(const std::vector<std::string>& map, Pos cur_pos, Pos from, std::set<Pos>& loop_positions) {
+bool traverse(const std::vector<std::string>& map, Pos cur_pos, Pos from, std::vector<Pos>& loop_positions) {
     char pipe = map[cur_pos[1]][cur_pos[0]];
 
     while (true) {
-        loop_positions.insert(cur_pos);
+        loop_positions.push_back(cur_pos);
 
         const auto& pipe_dirs = get_relative_connection_points_for_pipe(pipe);
 
@@ -90,7 +89,7 @@ aoch::Result solve_day10(aoch::Input& in) {
 
     // find the loop from start pos
     const std::vector<Pos> dirs = {{0, 1}, {0, -1}, {1, 0}, {-1, 0}};
-    std::set<Pos> loop_positions;
+    std::vector<Pos> loop_positions;
 
     for (const auto& dir : dirs) {
         Pos cur_pos = {start[0] + dir[0], start[1] + dir[1]};
@@ -100,7 +99,7 @@ aoch::Result solve_day10(aoch::Input& in) {
 
             if (is_connected(pipe, cur_pos, start)) {
                 Pos from = start;
-                std::set<Pos> tmp;
+                std::vector<Pos> tmp {start};
                 if (traverse(in, cur_pos, from, tmp)) {
                     loop_positions = std::move(tmp);
                     break;
@@ -109,72 +108,24 @@ aoch::Result solve_day10(aoch::Input& in) {
         }
     }
 
-    a.part1 = std::to_string(loop_positions.size()/2 + loop_positions.size()%2);
-
+    a.part1 = std::to_string(loop_positions.size() / 2);
 
     // part 2
-    std::map<std::array<int, 2>, std::string> dir_to_dir_char = {
-        {{-1,  0}, "W"},
-        {{ 1,  0}, "O"},
-        {{ 0, -1}, "N"},
-        {{ 0,  1}, "S"},
-    };
+    // using the shoelace formula & Pick's theorem to calculate the enclosed tiles.
 
-    std::map<std::string, char> con_dirs_str_to_pipe = {
-        {"NW", 'J'},
-        {"NO", 'L'},
-        {"SW", '7'},
-        {"OS", 'F'},
-        {"NS", '|'},
-        {"OW", '-'},
-    };
+    // we add start to the of the vector end even tho it is already in it at the start to make the calculation
+    // easier, elsewise we would have to do another addition step after the for loop
+    loop_positions.push_back(start);
 
-    std::string start_con_dirs = "";
-
-    for (const auto& dir : dirs) {
-        Pos cur_pos = {start[0] + dir[0], start[1] + dir[1]};
-        if (loop_positions.count(cur_pos)) {
-            start_con_dirs += dir_to_dir_char[cur_pos];
-        }
+    float pipe_enclosed_area = 0;
+    for (size_t i = 0; i < loop_positions.size() - 1; ++i) {
+        pipe_enclosed_area += loop_positions[i][0] * loop_positions[i+1][1] - loop_positions[i][1] * loop_positions[i+1][0];
     }
+    pipe_enclosed_area = std::abs(pipe_enclosed_area / 2.0);
 
-    std::sort(start_con_dirs.begin(), start_con_dirs.end());
-
-    // replace start 'S' tile with it's corresponding pipe char
-    in[start[1]][start[0]] = con_dirs_str_to_pipe[start_con_dirs];
-
-    loop_positions.insert(start);
-
-    size_t enclosed_tiles_count = 0;
-
-    for (size_t y = 0; y < in.size(); ++y) {
-        bool inside_loop = false;
-
-        for (size_t x = 0; x < in[y].size(); ++x) {
-            if (loop_positions.count({static_cast<int>(x), static_cast<int>(y)})) {
-                char p = in[y][x];
-
-                if (p == '|') {
-                    inside_loop = !inside_loop;
-                } else if (p == 'L') {
-                    x++;
-                    while (in[y][x] == '-') { x++; }
-                    p = in[y][x];
-                    if (p == '7') inside_loop = !inside_loop;
-                } else if (p == 'F') {
-                    x++;
-                    while (in[y][x] == '-') { x++; }
-                    p = in[y][x];
-                    if (p == 'J') {
-                        inside_loop = !inside_loop;
-                    }
-
-                }
-            } else if (inside_loop) {
-                enclosed_tiles_count++;
-            }
-        }
-    }
+    // minus 1 from the size because start pos is accounted twice for
+    float pipe_points_halfed = (loop_positions.size() - 1) / 2.0;
+    int enclosed_tiles_count = pipe_enclosed_area - pipe_points_halfed + 1.0;
 
     a.part2 = std::to_string(enclosed_tiles_count);
 
