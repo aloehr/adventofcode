@@ -18,7 +18,7 @@ set(SRC_FILES
     solutions/day12.cpp
     solutions/day13.cpp
     #solutions/day14.cpp
-    #solutions/day15.cpp
+    solutions/day15.cpp
     #solutions/day16.cpp
     #solutions/day17.cpp
     #solutions/day18.cpp
