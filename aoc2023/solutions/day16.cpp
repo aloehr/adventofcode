@@ -13,6 +13,32 @@ using DirT = std::array<int, 2>;
 
 enum Dir {TOP, LEFT, RIGHT, BOTTOM};
 
+static void convert(std::vector<std::string>& map) {
+    for (size_t i = 0; i < map.size(); ++i) {
+        for (size_t j = 0; j < map[i].size(); ++j) {
+            switch (map[i][j]) {
+                case '/':
+                    map[i][j] = 0;
+                    break;
+                case '-':
+                    map[i][j] = 1;
+                    break;
+                case '|':
+                    map[i][j] = 2;
+                    break;
+                case '\\':
+                    map[i][j] = 3;
+                    break;
+                case '.':
+                    map[i][j] = 4;
+                    break;
+            }
+        }
+    }
+
+    return;
+}
+
 bool is_inbound(const std::vector<std::string>& map, const PosT& p, const DirT& d) {
     if (p[0] == 0 && d[0] < 0) return false;
     if (p[1] == 0 && d[1] < 0) return false;
@@ -22,28 +48,56 @@ bool is_inbound(const std::vector<std::string>& map, const PosT& p, const DirT& 
     return true;
 }
 
-void traverse(const std::vector<std::string>& map, PosT cur_pos, Dir d, std::vector<std::vector<char>>& memo) {
-    static std::map<int, std::vector<DirT>> next_dirs{
-        {'.' | (Dir::TOP << 8),    {{ 0, -1}}},
-        {'.' | (Dir::LEFT << 8),   {{-1,  0}}},
-        {'.' | (Dir::RIGHT << 8),  {{ 1,  0}}},
-        {'.' | (Dir::BOTTOM << 8), {{ 0,  1}}},
-        {'|' | (Dir::TOP << 8),    {{ 0, -1}}},
-        {'|' | (Dir::LEFT << 8),   {{ 0, -1}, { 0,  1}}},
-        {'|' | (Dir::RIGHT << 8),  {{ 0, -1}, { 0,  1}}},
-        {'|' | (Dir::BOTTOM << 8), {{ 0,  1}}},
-        {'-' | (Dir::TOP << 8),    {{-1,  0}, { 1,  0}}},
-        {'-' | (Dir::LEFT << 8),   {{-1,  0}}},
-        {'-' | (Dir::RIGHT << 8),  {{ 1,  0}}},
-        {'-' | (Dir::BOTTOM << 8), {{-1,  0}, { 1,  0}}},
-        {'/' | (Dir::TOP << 8),    {{ 1,  0}}},
-        {'/' | (Dir::LEFT << 8),   {{ 0,  1}}},
-        {'/' | (Dir::RIGHT << 8),  {{ 0, -1}}},
-        {'/' | (Dir::BOTTOM << 8), {{-1,  0}}},
-        {'\\' | (Dir::TOP << 8),    {{-1,  0}}},
-        {'\\' | (Dir::LEFT << 8),   {{ 0, -1}}},
-        {'\\' | (Dir::RIGHT << 8),  {{ 0,  1}}},
-        {'\\' | (Dir::BOTTOM << 8), {{ 1,  0}}},
+unsigned int start_traverse(const std::vector<std::string>& map, PosT start_pos, Dir start_d) {
+    // tells the relative next direction based on an index based on current tile type and current light direction
+    static std::vector<std::vector<DirT>> next_dirs {
+        // '/'
+        {{ 1,  0}}, // T
+        {{ 0,  1}}, // L
+        {{ 0, -1}}, // R
+        {{-1,  0}}, // B
+
+        // '-'
+        {{-1,  0}, { 1,  0}},
+        {{-1,  0}},
+        {{ 1,  0}},
+        {{-1,  0}, { 1,  0}},
+
+        // '|'
+        {{ 0, -1}},
+        {{ 0, -1}, { 0,  1}},
+        {{ 0, -1}, { 0,  1}},
+        {{ 0,  1}},
+
+        // '\\'
+        {{-1,  0}},
+        {{ 0, -1}},
+        {{ 0,  1}},
+        {{ 1,  0}},
+
+        // '.'
+        {{ 0, -1}},
+        {{-1,  0}},
+        {{ 1,  0}},
+        {{ 0,  1}},
+    };
+
+    // symmetry masks for the bitfield based on an index based on current tile type and current light direction
+    static std::vector<unsigned int> symmetry_masks {
+        // '/'
+        0x3, 0x3, 0xC, 0xC, // order T L R B
+
+        // '-'
+        0xF, 0xF, 0xF, 0xF,
+
+        // '|'
+        0xF, 0xF, 0xF, 0xF,
+
+        // '\\'
+        0x5, 0xA, 0x5, 0xA,
+
+        // '.'
+        0x9, 0x6, 0x6, 0x9,
     };
 
     static std::map<DirT, Dir> relative_pos_to_dir{
@@ -53,28 +107,44 @@ void traverse(const std::vector<std::string>& map, PosT cur_pos, Dir d, std::vec
         {{-1,  0}, Dir::LEFT},
     };
 
-    // memo is a bitset with 4 bits per tile. (one bit for every light direction).
-    if (memo[cur_pos[1]][cur_pos[0]] & (1 << d)) {
-        return;
-    }
-    memo[cur_pos[1]][cur_pos[0]] |= 1 << d;
-
-    char cur_tile = map[cur_pos[1]][cur_pos[0]];
-
-    for (const auto& next_dir : next_dirs[cur_tile | (d << 8)]) {
-        if (!is_inbound(map, cur_pos, next_dir)) continue;
-
-        PosT next_pos = {cur_pos[0] + next_dir[0], cur_pos[1] + next_dir[1]};
-        traverse(map, next_pos, relative_pos_to_dir[next_dir], memo);
-    }
-
-    return;
-}
-
-unsigned int start_traverse(const std::vector<std::string>& map, PosT cur_pos, Dir d) {
     std::vector<std::vector<char>> memo(map.size(), std::vector<char>(map[0].size(), 0));
+    std::vector<std::pair<PosT, Dir>> queue {std::make_pair(start_pos, start_d)};
 
-    traverse(map, cur_pos, d, memo);
+    while (queue.size()) {
+        auto cur = std::move(queue.back());
+        queue.pop_back();
+
+        while (true) {
+            // memo is a bitset with 4 bits per tile. (one bit for every light direction).
+            if (memo[cur.first[1]][cur.first[0]] & (1 << cur.second)) {
+                break;
+            }
+
+            char cur_tile = map[cur.first[1]][cur.first[0]];
+
+            // index for current tile type and current light direction
+            unsigned int idx = (cur_tile << 2) | cur.second;
+
+            // there are symmetries depending on direction you enter the tile and the tile type.
+            memo[cur.first[1]][cur.first[0]] |= symmetry_masks[idx];
+
+            auto& next_dirs_ref = next_dirs[idx];
+
+            // if we split the beam, put one of the two beams on the  queue while continue following the other one;
+            if (next_dirs_ref.size() > 1 && is_inbound(map, cur.first, next_dirs_ref[1])) {
+                PosT next_pos = {cur.first[0] + next_dirs_ref[1][0], cur.first[1] + next_dirs_ref[1][1]};
+                queue.push_back(std::make_pair(next_pos, relative_pos_to_dir[next_dirs_ref[1]]));
+            }
+
+            if (!is_inbound(map, cur.first, next_dirs_ref[0])) {
+                break;
+            }
+
+            cur.first[0] += next_dirs_ref[0][0];
+            cur.first[1] += next_dirs_ref[0][1];
+            cur.second = relative_pos_to_dir[next_dirs_ref[0]];
+        }
+    }
 
     unsigned int sum = 0;
     for (size_t i = 0; i < memo.size(); ++i) {
@@ -88,6 +158,8 @@ unsigned int start_traverse(const std::vector<std::string>& map, PosT cur_pos, D
 
 aoch::Result solve_day16(aoch::Input& in) {
     aoch::Result a;
+
+    convert(in);
 
     a.part1 = std::to_string(start_traverse(in, {0, 0}, Dir::RIGHT));
 
