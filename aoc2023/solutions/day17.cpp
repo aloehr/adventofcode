@@ -59,10 +59,12 @@ int dijkstra(
         Dir::NORTH,
     };
 
-    // init priority queue with start states
-    std::priority_queue<State> front;
-    front.push({{0, 0}, Dir::EAST, 0, 0});
-    front.push({{0, 0}, Dir::SOUTH, 0, 0});
+    // using a heap as priority queue
+    std::vector<State> front {
+        {{0, 0}, Dir::EAST, 0, 0},
+        {{0, 0}, Dir::SOUTH, 0, 0},
+    };
+    std::make_heap(front.begin(), front.end());
 
     // calc required amount of bits for the straight line moves count
     unsigned int needed_bits = 0;
@@ -77,23 +79,24 @@ int dijkstra(
     );
 
     while(front.size()) {
-        auto cur = front.top();
-        front.pop();
+        std::pop_heap(front.begin(), front.end());
+        auto cur = front.back();
+        front.pop_back();
 
-        unsigned int heat_loss_idx = cur.d << needed_bits | cur.straight_line_moves_count;
-
-        // if the heat loss of the current move is not better drop this move
-        if (heat_loss[cur.pos[1]][cur.pos[0]][heat_loss_idx] <= cur.cur_heat_loss) {
-            continue;
-        }
-
-        // set new best heat loss value
-        heat_loss[cur.pos[1]][cur.pos[0]][heat_loss_idx] = cur.cur_heat_loss;
-
-        // set best heat value to current's move heat_value for all states in cur position with
-        // same direction that have a greater heat_value while also having greater straight_line_move_count.
-        // But only if current's move straight_line_moves_count is bigger than the min_straight_line_moves.
+        // we can't stop if we moved less steps than min_straight_line_moves
         if (cur.straight_line_moves_count >= min_straight_line_moves) {
+            unsigned int heat_loss_idx = cur.d << needed_bits | cur.straight_line_moves_count;
+            // if the heat loss of the current move is not better drop this move
+            if (heat_loss[cur.pos[1]][cur.pos[0]][heat_loss_idx] <= cur.cur_heat_loss) {
+                continue;
+            }
+
+            // set new best heat loss value for this state
+            heat_loss[cur.pos[1]][cur.pos[0]][heat_loss_idx] = cur.cur_heat_loss;
+
+            // set best heat value to current's move heat_value for all states in cur position with
+            // same direction that have a greater heat_value while also having greater straight_line_move_count.
+            // But only if current's move straight_line_moves_count is bigger than the min_straight_line_moves.
             for (unsigned int i = cur.straight_line_moves_count+1; i <= max_straight_line_moves; ++i) {
                 unsigned int cur_idx = (cur.d << needed_bits) | i;
                 if (heat_loss[cur.pos[1]][cur.pos[0]][cur_idx] > cur.cur_heat_loss) {
@@ -102,31 +105,48 @@ int dijkstra(
                     break;
                 }
             }
-        }
 
-        // we reached the goal
-        if (cur.pos[1] == dest[1] && cur.pos[0] == dest[0]) {
-            break;
+            // we reached the goal
+            if (cur.pos[1] == dest[1] && cur.pos[0] == dest[0]) {
+                break;
+            }
         }
 
         // move straight if possible
         if (cur.straight_line_moves_count < max_straight_line_moves && is_inbound(map, cur.pos, dir_to_relative_dir[cur.d])) {
             PosT next_pos = {cur.pos[0] + dir_to_relative_dir[cur.d][0], cur.pos[1] + dir_to_relative_dir[cur.d][1]};
-            front.push({next_pos, cur.d, cur.straight_line_moves_count + 1, cur.cur_heat_loss + (map[next_pos[1]][next_pos[0]] - '0')});
+            front.push_back({next_pos, cur.d, cur.straight_line_moves_count + 1, cur.cur_heat_loss + (map[next_pos[1]][next_pos[0]] - '0')});
+            std::push_heap(front.begin(), front.end());
         }
 
         // move left if possible
-        if (cur.straight_line_moves_count >= min_straight_line_moves && is_inbound(map, cur.pos, dir_to_relative_dir[move_left[cur.d]])) {
+        if (cur.straight_line_moves_count >= min_straight_line_moves) {
             Dir next_dir = move_left[cur.d];
-            PosT next_pos = {cur.pos[0] + dir_to_relative_dir[next_dir][0], cur.pos[1] + dir_to_relative_dir[next_dir][1]};
-            front.push({next_pos, next_dir, 1, cur.cur_heat_loss + (map[next_pos[1]][next_pos[0]] - '0')});
+            DirT test_dir = {
+                std::max(static_cast<int>(min_straight_line_moves), 1) * dir_to_relative_dir[next_dir][0],
+                std::max(static_cast<int>(min_straight_line_moves), 1) * dir_to_relative_dir[next_dir][1]
+            };
+
+            if (is_inbound(map, cur.pos, test_dir)) {
+                PosT next_pos = {cur.pos[0] + dir_to_relative_dir[next_dir][0], cur.pos[1] + dir_to_relative_dir[next_dir][1]};
+                front.push_back({next_pos, next_dir, 1, cur.cur_heat_loss + (map[next_pos[1]][next_pos[0]] - '0')});
+                std::push_heap(front.begin(), front.end());
+            }
         }
 
         // move right if possible
-        if (cur.straight_line_moves_count >= min_straight_line_moves && is_inbound(map, cur.pos, dir_to_relative_dir[move_right[cur.d]])) {
+        if (cur.straight_line_moves_count >= min_straight_line_moves) {
             Dir next_dir = move_right[cur.d];
-            PosT next_pos = {cur.pos[0] + dir_to_relative_dir[next_dir][0], cur.pos[1] + dir_to_relative_dir[next_dir][1]};
-            front.push({next_pos, next_dir, 1, cur.cur_heat_loss + (map[next_pos[1]][next_pos[0]] - '0')});
+            DirT test_dir = {
+                std::max(static_cast<int>(min_straight_line_moves), 1) * dir_to_relative_dir[next_dir][0],
+                std::max(static_cast<int>(min_straight_line_moves), 1) * dir_to_relative_dir[next_dir][1]
+            };
+
+            if (is_inbound(map, cur.pos, test_dir)) {
+                PosT next_pos = {cur.pos[0] + dir_to_relative_dir[next_dir][0], cur.pos[1] + dir_to_relative_dir[next_dir][1]};
+                front.push_back({next_pos, next_dir, 1, cur.cur_heat_loss + (map[next_pos[1]][next_pos[0]] - '0')});
+                std::push_heap(front.begin(), front.end());
+            }
         }
     }
 
