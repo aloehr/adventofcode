@@ -2,22 +2,18 @@
 #include<array>
 #include<iostream>
 #include<map>
-#include<set>
-#include<queue>
-#include<unordered_set>
 #include<string>
+#include<tuple>
 #include<utility>
 #include<vector>
 
 #include<aoch/AOCSolutionTypes.hpp>
 
-enum Dir { NORTH, EAST, SOUTH, WEST };
 
-struct Node;
+enum Dir { NORTH, EAST, SOUTH, WEST };
 
 using PosT = std::array<unsigned int, 2>;
 using DirT = std::array<int, 2>;
-using GraphT = std::map<PosT, Node*>;
 
 struct Node {
     unsigned int id;
@@ -25,6 +21,7 @@ struct Node {
     std::vector<std::pair<Node*, int>> connections;
 };
 
+using GraphT = std::map<PosT, Node*>;
 
 std::vector<PosT> possible_moves(const aoch::Input& map, const PosT pos, const PosT *exclusion = nullptr) {
     std::vector<PosT> ret;
@@ -134,34 +131,45 @@ std::map<PosT, Node*> create_graph(const aoch::Input& map, const std::vector<Pos
 }
 
 unsigned int dfs(const GraphT g, Node* start, Node* dest) {
-    std::vector<std::tuple<Node*, unsigned int, std::unordered_set<Node*>>> q;
-    q.push_back(std::make_tuple(start, 0, std::unordered_set<Node*>({start})));
-
+    std::vector<std::tuple<Node*, unsigned int, unsigned int>> q;
+    std::vector<Node*> visited_stack;
     unsigned int longest_path_steps = 0;
+    unsigned int last_depth = 0;
+
+    q.push_back(std::make_tuple(start, 0, 0));
 
     while (q.size()) {
         Node* cur;
         unsigned int cur_steps;
-        std::unordered_set<Node*> visited;
+        unsigned int cur_depth;
 
-        std::tie(cur, cur_steps, visited) = std::move(q.back());
+        std::tie(cur, cur_steps, cur_depth) = q.back();
         q.pop_back();
+
+        if (cur_depth && cur_depth <= last_depth) {
+            // remove elements from visited_stack according to the depth diff between
+            // last and current depth.
+            // For a depth diff of N pop the last N+1 elements in visited_stack
+            unsigned int remove_count = last_depth - cur_depth + 1;
+            visited_stack.resize(visited_stack.size() - remove_count);
+        }
+
+        visited_stack.push_back(cur);
 
         if (cur == dest) {
             if (cur_steps > longest_path_steps) {
                 longest_path_steps = cur_steps;
             }
+            last_depth = cur_depth;
             continue;
         }
 
-
         for (const auto& p : cur->connections) {
-            if (visited.count(p.first)) continue;
-
-            auto tmp = visited;
-            tmp.insert(p.first);
-            q.push_back(std::make_tuple(p.first, cur_steps + p.second, std::move(tmp)));
+            if (std::find(visited_stack.cbegin(), visited_stack.cend(), p.first) != visited_stack.cend()) continue;
+            q.push_back(std::make_tuple(p.first, cur_steps + p.second, cur_depth+1));
         }
+
+        last_depth = cur_depth;
     }
 
     return longest_path_steps;
@@ -181,7 +189,7 @@ aoch::Result solve_day23(aoch::Input& in) {
 
 
     // part 2
-    // removes all slopes
+    // convert all slopes into normal path tiles
     for (auto& l : in) {
         for (auto& c : l) {
             if (c != '.' && c != '#') c = '.';
