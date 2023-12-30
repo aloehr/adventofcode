@@ -1,10 +1,12 @@
 #include<algorithm>
 #include<array>
+#include<cassert>
 #include<iostream>
+#include<limits>
 #include<map>
+#include<queue>
 #include<set>
 #include<string>
-#include<unordered_set>
 
 #include<aoch/AOCSolutionTypes.hpp>
 #include<aoch/string.hpp>
@@ -13,38 +15,81 @@
 using EdgeT = std::array<unsigned int, 2>;
 using AdjacencyMatrixT = std::vector<std::vector<unsigned int>>;
 
-void print_edge(const EdgeT e, std::map<unsigned int, std::string>& id_to_name) {
-    std::cout << id_to_name[e[0]] << " -- " << id_to_name[e[1]] << std::endl;
-}
+// uses the stoer - wagner algorithm to find a minimal cut. (works for undirected graphs with non-negativ weights).
+// for unweighted graphs, like the one in this problem, the minimal cut is the cut with the fewest edges cut, which is
+// exactly what we want.
+// https://en.wikipedia.org/wiki/Stoer%E2%80%93Wagner_algorithm
+std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMatrixT mat) {
 
-void create_dsf_tree_iterative(const AdjacencyMatrixT& mat, std::vector<EdgeT>& dsf_tree) {
-    static std::vector<unsigned int> visited;
-    std::vector<EdgeT> q;
+    size_t nodes_count = mat.size();
+    std::vector<std::vector<unsigned int>> merged_nodes(nodes_count);
 
-    visited.assign(mat.size(), 0);
+    std::pair<unsigned int, std::vector<unsigned int>> best_min_cut = {std::numeric_limits<unsigned int>::max(), {}};
 
-    dsf_tree.clear();
-    dsf_tree.reserve(mat.size());
+    for (unsigned int i = 0; i < nodes_count; ++i) {
+        merged_nodes[i].push_back(i);
+    }
 
-    q.push_back({0, 0});
+    for (size_t phase = 1; phase < nodes_count; ++phase) {
+        std::priority_queue<std::pair<unsigned int, unsigned int>> q;
+        std::vector<unsigned int> a = mat[0];
+        std::vector<unsigned int> outside_a(nodes_count, 1);
+        outside_a[0] = 0;
 
-    while (q.size()) {
-        auto cur = q.back();
-        q.pop_back();
+        for (size_t i = 0; i < nodes_count; ++i) {
+            if (a[i]) q.push({a[i], i});
+        }
 
-        if (visited[cur[0]]) continue;
-        visited[cur[0]] = 1;
-        dsf_tree.push_back(cur);
+        size_t s;
+        size_t t;
+        for (size_t i = 0; i < nodes_count - phase - 1; ++i) {
 
-        for (size_t i = 0; i < mat.size(); ++i) {
-            if (!mat[cur[0]][i] || visited[i]) continue;
+            while (!outside_a[q.top().second]) {
+                q.pop();
+            }
 
-            q.push_back({static_cast<unsigned int>(i), cur[0]});
+            t = q.top().second;
+            q.pop();
+
+            outside_a[t] = 0;
+            a[t] = 0;
+
+            for (size_t j = 1; j < nodes_count; ++j) {
+                if (mat[t][j] && outside_a[j]) {
+                    a[j] += mat[t][j];
+                    q.push({a[j], j});
+                }
+            }
+        }
+
+        while (!outside_a[q.top().second]) {
+            q.pop();
+        }
+
+        s = t;
+        t = q.top().second;
+
+        if (best_min_cut.first > a[t]) {
+            best_min_cut = {a[t], merged_nodes[t]};
+        }
+
+        merged_nodes[s].insert(merged_nodes[s].end(), merged_nodes[t].begin(), merged_nodes[t].end());
+
+
+        mat[s][t] = 0;
+        mat[t][s] = 0;
+        for (size_t i = 0; i < nodes_count; ++i) {
+            mat[s][i] += mat[t][i];
+            mat[i][s] = mat[s][i];
+            mat[t][i] = 0;
+            mat[i][t] = 0;
         }
     }
+
+    return best_min_cut;
 }
 
- AdjacencyMatrixT create_adjacency_matrix(const std::vector<EdgeT>& edges) {
+AdjacencyMatrixT create_adjacency_matrix(const std::vector<EdgeT>& edges) {
     // find max node idx
     unsigned int max_node_idx = std::max(edges[0][0], edges[0][1]);
     for (size_t i = 1; i < edges.size(); ++i) {
@@ -60,68 +105,6 @@ void create_dsf_tree_iterative(const AdjacencyMatrixT& mat, std::vector<EdgeT>& 
     }
 
     return mat;
-}
-
-// .first contains the chains, .second contains Edges that weren't used in any chain if there were any
-std::pair<std::vector<std::vector<EdgeT>>, std::vector<EdgeT>> chain_decomposition(const AdjacencyMatrixT& mat, std::vector<EdgeT>& dsf_tree) {
-    std::unordered_set<size_t> used_edges;
-    std::unordered_set<size_t> dsf_edges;
-    std::vector<unsigned int> visited(dsf_tree.size(), 0);
-    std::vector<unsigned int> node_id_to_dsf_tree_id(dsf_tree.size(), 0);
-
-    for (size_t i = 0; i < dsf_tree.size(); ++i) {
-        node_id_to_dsf_tree_id[dsf_tree[i][0]] = i;
-    }
-
-    for (size_t i = 1; i < dsf_tree.size(); ++i) {
-        auto& e = dsf_tree[i];
-        dsf_edges.insert((static_cast<size_t>(std::min(e[0], e[1])) << 32) | std::max(e[0], e[1]));
-    }
-
-    std::vector<std::vector<EdgeT>> chains;
-
-    for (size_t i = 0; i < dsf_tree.size(); ++i) {
-        for (size_t j = 0; j < mat.size(); ++j) {
-
-            unsigned int cur = dsf_tree[i][0];
-
-            if (!mat[cur][j]) continue;
-            if (dsf_edges.count((static_cast<size_t>(std::min(cur, static_cast<unsigned int>(j))) << 32) | std::max(cur, static_cast<unsigned int>(j))))
-                continue;
-
-            if (node_id_to_dsf_tree_id[j] < i) continue;
-            unsigned int next = j;
-
-            // if we are here we have found a backedge
-            visited[cur] = 1;
-
-            std::vector<EdgeT> cur_chain;
-
-            while (true) {
-                used_edges.insert((static_cast<size_t>(std::min(cur, next)) << 32) | std::max(cur, next));
-                used_edges.insert({next, cur});
-                cur_chain.push_back({cur, next});
-
-                if (visited[next]) break;
-
-                visited[next] = 1;
-                cur = next;
-                next = dsf_tree[node_id_to_dsf_tree_id[next]][1];
-            }
-
-            chains.push_back(std::move(cur_chain));
-        }
-    }
-
-    std::vector<EdgeT> unused_edges;
-    for (size_t i = 0; i < mat.size(); ++i) {
-        for (size_t j = i + 1; j < mat.size(); ++j) {
-            if (mat[i][j] && !used_edges.count((static_cast<size_t>(std::min(i, j)) << 32) | std::max(i, j)))
-                unused_edges.push_back({static_cast<unsigned int>(i), static_cast<unsigned int >(j)});
-        }
-    }
-
-    return {std::move(chains), {std::move(unused_edges)}};
 }
 
 aoch::Result solve_day25(aoch::Input& in) {
@@ -144,14 +127,12 @@ aoch::Result solve_day25(aoch::Input& in) {
     std::set<std::array<unsigned int, 2>, decltype(cmp)> wires(cmp);
 
     std::map<std::string, unsigned int> comp_name_to_comp_id;
-    std::map<unsigned int, std::string> comp_id_to_comp_name;
 
-    auto get_comp_id = [&comp_name_to_comp_id, &comp_id_to_comp_name] (const std::string& comp_name) {
+    auto get_comp_id = [&comp_name_to_comp_id] (const std::string& comp_name) {
         static unsigned int next_free_comp_id = 0;
 
         if (!comp_name_to_comp_id.count(comp_name)) {
             comp_name_to_comp_id[comp_name] = next_free_comp_id;
-            comp_id_to_comp_name[next_free_comp_id] = comp_name;
             return next_free_comp_id++;
         } else {
             return comp_name_to_comp_id[comp_name];
@@ -172,76 +153,14 @@ aoch::Result solve_day25(aoch::Input& in) {
         }
     }
 
-    std::vector<std::set<unsigned int>> components(comp_name_to_comp_id.size());
-
-    for (const auto& w : wires) {
-        components[w[0]].insert(w[1]);
-        components[w[1]].insert(w[0]);
-    }
-
     std::vector<std::array<unsigned int, 2>> wires_vec(wires.cbegin(), wires.cend());
 
     auto mat = create_adjacency_matrix(wires_vec);
-    std::vector<EdgeT> dsf_tree;
-    dsf_tree.reserve(mat.size());
+    auto result = find_minimum_cut(create_adjacency_matrix(wires_vec));
 
-    bool found = false;
-    for (size_t i = 0; i < wires_vec.size() - 1 && !found; ++i) {
-        auto& w1 = wires_vec[i];
+    assert(result.first == 3);
 
-        mat[w1[0]][w1[1]] = 0;
-        mat[w1[1]][w1[0]] = 0;
-
-        for (size_t j = i + 1; j < wires_vec.size() && !found; ++j) {
-            auto& w2 = wires_vec[j];
-            mat[w2[0]][w2[1]] = 0;
-            mat[w2[1]][w2[0]] = 0;
-
-            create_dsf_tree_iterative(mat, dsf_tree);
-            auto res = chain_decomposition(mat, dsf_tree);
-
-            if (res.second.size() == 1) {
-                found = true;
-                mat[res.second[0][0]][res.second[0][1]] = 0;
-                mat[res.second[0][1]][res.second[0][0]] = 0;
-
-                auto visit_count = [&mat] (unsigned int start) {
-                    std::vector<unsigned int> visited(mat.size(), 0);
-                    std::vector<unsigned int> q { start };
-                    unsigned int visited_count = 0;
-
-                    while (q.size()) {
-                        unsigned int cur = q.back();
-                        q.pop_back();
-
-                        if (visited[cur]) continue;
-                        visited[cur] = 1;
-                        visited_count++;
-
-                        for (size_t i = 0; i < mat.size(); ++i) {
-                            if (mat[cur][i]) {
-                                q.push_back(i);
-                            }
-                        }
-                    }
-
-                    return visited_count;
-                };
-
-                auto r1 = visit_count(res.second[0][0]);
-                auto r2 = visit_count(res.second[0][1]);
-
-                a.part1 = std::to_string(r1 * r2);
-            }
-
-            mat[w2[0]][w2[1]] = 1;
-            mat[w2[1]][w2[0]] = 1;
-        }
-
-        mat[w1[0]][w1[1]] = 1;
-        mat[w1[1]][w1[0]] = 1;
-    }
-
+    a.part1 = std::to_string(result.second.size() * (comp_name_to_comp_id.size() - result.second.size()));
     a.part2 = "N/A";
 
     return a;
