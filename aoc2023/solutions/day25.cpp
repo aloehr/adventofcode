@@ -73,6 +73,10 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMat
             best_min_cut = {a[t], merged_nodes[t]};
         }
 
+        if (a[t] == 3) {
+            return {a[t], std::move(merged_nodes[t])};
+        }
+
         merged_nodes[s].insert(merged_nodes[s].end(), merged_nodes[t].begin(), merged_nodes[t].end());
 
 
@@ -89,12 +93,13 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMat
     return best_min_cut;
 }
 
-AdjacencyMatrixT create_adjacency_matrix(const std::vector<EdgeT>& edges) {
+template <typename T>
+AdjacencyMatrixT create_adjacency_matrix(const std::set<EdgeT, T>& edges) {
     // find max node idx
-    unsigned int max_node_idx = std::max(edges[0][0], edges[0][1]);
-    for (size_t i = 1; i < edges.size(); ++i) {
-        max_node_idx = std::max(edges[i][0], max_node_idx);
-        max_node_idx = std::max(edges[i][1], max_node_idx);
+    unsigned int max_node_idx = 0;
+    for (const auto& e : edges) {
+        max_node_idx = std::max(e[0], max_node_idx);
+        max_node_idx = std::max(e[1], max_node_idx);
     }
 
     // create adjacency matrix
@@ -125,7 +130,6 @@ aoch::Result solve_day25(aoch::Input& in) {
     };
 
     std::set<std::array<unsigned int, 2>, decltype(cmp)> wires(cmp);
-
     std::map<std::string, unsigned int> comp_name_to_comp_id;
 
     auto get_comp_id = [&comp_name_to_comp_id] (const std::string& comp_name) {
@@ -153,10 +157,8 @@ aoch::Result solve_day25(aoch::Input& in) {
         }
     }
 
-    std::vector<std::array<unsigned int, 2>> wires_vec(wires.cbegin(), wires.cend());
-
-    auto mat = create_adjacency_matrix(wires_vec);
-    auto result = find_minimum_cut(create_adjacency_matrix(wires_vec));
+    auto mat = create_adjacency_matrix(wires);
+    auto result = find_minimum_cut(mat);
 
     assert(result.first == 3);
 
