@@ -13,15 +13,15 @@
 
 
 using EdgeT = std::array<unsigned int, 2>;
-using AdjacencyMatrixT = std::vector<std::vector<unsigned int>>;
+using AdjacencyListT = std::vector<std::vector<std::pair<unsigned int, unsigned int>>>;
 
 // uses the stoer - wagner algorithm to find a minimal cut. (works for undirected graphs with non-negativ weights).
 // for unweighted graphs, like the one in this problem, the minimal cut is the cut with the fewest edges cut, which is
 // exactly what we want.
 // https://en.wikipedia.org/wiki/Stoer%E2%80%93Wagner_algorithm
-std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMatrixT mat) {
+std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyListT nodes) {
 
-    size_t nodes_count = mat.size();
+    size_t nodes_count = nodes.size();
     std::vector<std::vector<unsigned int>> merged_nodes(nodes_count);
 
     std::pair<unsigned int, std::vector<unsigned int>> best_min_cut = {std::numeric_limits<unsigned int>::max(), {}};
@@ -32,32 +32,31 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMat
 
     for (size_t phase = 1; phase < nodes_count; ++phase) {
         std::priority_queue<std::pair<unsigned int, unsigned int>> q;
-        std::vector<unsigned int> a = mat[0];
+        std::vector<unsigned int> a(nodes_count, 0);
         std::vector<unsigned int> outside_a(nodes_count, 1);
-        outside_a[0] = 0;
 
-        for (size_t i = 0; i < nodes_count; ++i) {
-            if (a[i]) q.push({a[i], i});
+        for (auto e : nodes[0]) {
+            a[e.first] = e.second;
+            q.push({e.second, e.first});
         }
 
         size_t s;
-        size_t t;
-        for (size_t i = 0; i < nodes_count - phase - 1; ++i) {
+        size_t t = 0;
+        outside_a[0] = 0;
 
-            while (!outside_a[q.top().second]) {
+        for (size_t i = 0; i < nodes_count - phase - 1; ++i) {
+            while(!outside_a[t]) {
+                t = q.top().second;
                 q.pop();
             }
-
-            t = q.top().second;
-            q.pop();
 
             outside_a[t] = 0;
             a[t] = 0;
 
-            for (size_t j = 1; j < nodes_count; ++j) {
-                if (mat[t][j] && outside_a[j]) {
-                    a[j] += mat[t][j];
-                    q.push({a[j], j});
+            for (const auto& e : nodes[t]) {
+                if (outside_a[e.first]) {
+                    a[e.first] += e.second;
+                    q.push({a[e.first], e.first});
                 }
             }
         }
@@ -65,7 +64,6 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMat
         while (!outside_a[q.top().second]) {
             q.pop();
         }
-
         s = t;
         t = q.top().second;
 
@@ -74,19 +72,46 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMat
         }
 
         if (a[t] == 3) {
-            return {a[t], std::move(merged_nodes[t])};
+            return best_min_cut;
         }
 
         merged_nodes[s].insert(merged_nodes[s].end(), merged_nodes[t].begin(), merged_nodes[t].end());
 
+        auto edge_t_s = std::find_if(nodes[t].begin(), nodes[t].end(), [s](const auto& a) {
+            return a.first == s;
+        });
+        if (edge_t_s != nodes[t].end()) {
+            nodes[t].erase(edge_t_s);
+        }
 
-        mat[s][t] = 0;
-        mat[t][s] = 0;
-        for (size_t i = 0; i < nodes_count; ++i) {
-            mat[s][i] += mat[t][i];
-            mat[i][s] = mat[s][i];
-            mat[t][i] = 0;
-            mat[i][t] = 0;
+        auto edge_s_t = std::find_if(nodes[s].begin(), nodes[s].end(), [t](const auto& a) {
+            return a.first == t;
+        });
+        if (edge_s_t != nodes[s].end()) {
+            nodes[s].erase(edge_s_t);
+        }
+
+        for (const auto& e : nodes[t]) {
+            auto edge_e_t = std::find_if(nodes[e.first].begin(), nodes[e.first].end(), [t](const auto& a) {
+                return a.first == t;
+            });
+
+            auto edge_s_e = std::find_if(nodes[s].begin(), nodes[s].end(), [&e](const auto& a) {
+                return a.first == e.first;
+            });
+
+            if (edge_s_e == nodes[s].end()) {
+                nodes[s].push_back(e);
+                edge_e_t->first = s;
+            } else {
+                edge_s_e->second += e.second;
+                nodes[e.first].erase(edge_e_t);
+
+                auto edge_e_s = std::find_if(nodes[e.first].begin(), nodes[e.first].end(), [s](const auto& a) {
+                    return a.first == s;
+                });
+                edge_e_s->second = edge_s_e->second;
+            }
         }
     }
 
@@ -94,7 +119,7 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyMat
 }
 
 template <typename T>
-AdjacencyMatrixT create_adjacency_matrix(const std::set<EdgeT, T>& edges) {
+AdjacencyListT create_adjacency_list(const std::set<EdgeT, T>& edges) {
     // find max node idx
     unsigned int max_node_idx = 0;
     for (const auto& e : edges) {
@@ -102,14 +127,14 @@ AdjacencyMatrixT create_adjacency_matrix(const std::set<EdgeT, T>& edges) {
         max_node_idx = std::max(e[1], max_node_idx);
     }
 
-    // create adjacency matrix
-    AdjacencyMatrixT mat(max_node_idx + 1, std::vector<unsigned int>(max_node_idx + 1, 0));
+    AdjacencyListT ret(max_node_idx + 1);
+
     for (const auto& e : edges) {
-        mat[e[0]][e[1]] = 1;
-        mat[e[1]][e[0]] = 1;
+        ret[e[0]].push_back({e[1], 1});
+        ret[e[1]].push_back({e[0], 1});
     }
 
-    return mat;
+    return ret;
 }
 
 aoch::Result solve_day25(aoch::Input& in) {
@@ -157,8 +182,8 @@ aoch::Result solve_day25(aoch::Input& in) {
         }
     }
 
-    auto mat = create_adjacency_matrix(wires);
-    auto result = find_minimum_cut(mat);
+    auto list = create_adjacency_list(wires);
+    auto result = find_minimum_cut(list);
 
     assert(result.first == 3);
 
