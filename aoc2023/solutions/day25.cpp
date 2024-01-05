@@ -1,15 +1,16 @@
-#include<algorithm>
-#include<array>
-#include<cassert>
-#include<iostream>
-#include<limits>
-#include<map>
-#include<queue>
-#include<set>
-#include<string>
+#include <algorithm>
+#include <array>
+#include <cassert>
+#include <iostream>
+#include <limits>
+#include <map>
+#include <set>
+#include <string>
 
-#include<aoch/AOCSolutionTypes.hpp>
-#include<aoch/string.hpp>
+#include <aoch/AOCSolutionTypes.hpp>
+#include <aoch/string.hpp>
+
+#include "BucketQueue.hpp"
 
 
 using EdgeT = std::array<unsigned int, 2>;
@@ -25,69 +26,76 @@ std::pair<unsigned int, std::vector<unsigned int>> find_minimum_cut(AdjacencyLis
     std::vector<std::vector<unsigned int>> merged_nodes(nodes_count);
 
     std::pair<unsigned int, std::vector<unsigned int>> best_min_cut = {std::numeric_limits<unsigned int>::max(), {}};
+    BucketQueue<unsigned int> q(nodes_count);
+    std::vector<unsigned int> a(nodes_count, 0);
 
     for (unsigned int i = 0; i < nodes_count; ++i) {
         merged_nodes[i].push_back(i);
     }
 
     for (size_t phase = 1; phase < nodes_count; ++phase) {
-        std::priority_queue<std::pair<unsigned int, unsigned int>> q;
-        std::vector<unsigned int> a(nodes_count, 0);
         std::vector<unsigned int> outside_a(nodes_count, 1);
+        q.clear();
 
         for (auto e : nodes[0]) {
             a[e.first] = e.second;
-            q.push({e.second, e.first});
+            q.insert(e.first, e.second);
         }
 
         size_t s;
-        size_t t = 0;
+        size_t t;
         outside_a[0] = 0;
 
         for (size_t i = 0; i < nodes_count - phase - 1; ++i) {
-            while(!outside_a[t]) {
-                t = q.top().second;
-                q.pop();
-            }
+            t = q.top();
+            q.pop_top();
 
             outside_a[t] = 0;
             a[t] = 0;
 
+            // remove outdated entries
+            while (!outside_a[q.top()]) {
+                q.pop_top();
+            }
+
             for (const auto& e : nodes[t]) {
                 if (outside_a[e.first]) {
                     a[e.first] += e.second;
-                    q.push({a[e.first], e.first});
+                    q.insert(e.first, a[e.first]);
                 }
             }
         }
 
-        while (!outside_a[q.top().second]) {
-            q.pop();
-        }
         s = t;
-        t = q.top().second;
+        t = q.top();
 
         if (best_min_cut.first > a[t]) {
             best_min_cut = {a[t], merged_nodes[t]};
         }
 
+        // early out because we know that a weight of 3 is the best we can get
         if (a[t] == 3) {
             return best_min_cut;
         }
 
-        merged_nodes[s].insert(merged_nodes[s].end(), merged_nodes[t].begin(), merged_nodes[t].end());
+        // make sure a is ready to use for next phase which means that
+        // all entries in a have to be 0.
+        // (and at this point only a[t] has a value other than 0)
+        a[t] = 0;
 
-        auto edge_t_s = std::find_if(nodes[t].begin(), nodes[t].end(), [s](const auto& a) {
+        merged_nodes[s].insert(merged_nodes[s].cend(), merged_nodes[t].cbegin(), merged_nodes[t].cend());
+
+        auto edge_t_s = std::find_if(nodes[t].cbegin(), nodes[t].cend(), [s](const auto& a) {
             return a.first == s;
         });
-        if (edge_t_s != nodes[t].end()) {
+        if (edge_t_s != nodes[t].cend()) {
             nodes[t].erase(edge_t_s);
         }
 
-        auto edge_s_t = std::find_if(nodes[s].begin(), nodes[s].end(), [t](const auto& a) {
+        auto edge_s_t = std::find_if(nodes[s].cbegin(), nodes[s].cend(), [t](const auto& a) {
             return a.first == t;
         });
-        if (edge_s_t != nodes[s].end()) {
+        if (edge_s_t != nodes[s].cend()) {
             nodes[s].erase(edge_s_t);
         }
 
