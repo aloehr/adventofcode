@@ -1,5 +1,7 @@
 #include<algorithm>
 #include<array>
+#include<cmath>
+#include<cassert>
 #include<deque>
 #include<functional>
 #include<iostream>
@@ -56,6 +58,12 @@ struct Module {
         return ret;
     }
 
+    void reset_state() {
+        for (size_t i = 0; i < this->state.size(); ++i) {
+            this->state[i] = Pulse::LOW;
+        }
+    }
+
     friend std::ostream& operator<<(std::ostream& os, const Module& m) {
         os << "Module{name: " << m.name << ", type: " << m.type;
         os << ", state: [";
@@ -86,6 +94,35 @@ struct Module {
 
     }
 };
+
+unsigned int run_until_receive_high(Module* start, Module* end) {
+    std::deque<PulseType> q;
+    unsigned int button_pressed_count = 0 ;
+
+    bool keep_running = true;
+
+    while (keep_running) {
+        button_pressed_count++;
+        q.push_back(std::make_tuple(nullptr, start, Pulse::LOW));
+
+        while (q.size()) {
+            Module *from, *to;
+            Pulse p;
+
+            std::tie(from, to, p) = q.front();
+            q.pop_front();
+
+            if (to == end && p == Pulse::HIGH) {
+                keep_running = false;
+            }
+            auto next_pulses = to->receive_signal(from, p);
+
+            q.insert(q.end(), next_pulses.begin(), next_pulses.end());
+        }
+    }
+
+    return button_pressed_count;
+}
 
 aoch::Result solve_day20(aoch::Input& in) {
     aoch::Result a;
@@ -180,7 +217,39 @@ aoch::Result solve_day20(aoch::Input& in) {
 
 
     // part 2
-    // TODO
+    Module *rx = module_name_to_module["rx"];
+    Module *rx_parent = rx->inputs[0];
+
+    for (auto m : modules) {
+        m->reset_state();
+    }
+
+    // checks if modules states is af they were just reset
+    auto is_state_reset = [&modules] () {
+        for (auto m : modules) {
+            // the state of 1 input conjunctions aka inverters is not relevant for the global state
+            // to be reset or not
+            if (m->type == ModuleType::CONJUNCTION && m->state.size() == 1) continue;
+
+            for (size_t i = 0; i < m->state.size(); ++i) {
+                if (m->state[i] != Pulse::LOW) return false;
+            }
+        }
+
+        return true;
+    };
+
+    unsigned long long result = 1;
+    for (auto start : broadcaster_ptr->destinations) {
+        result = std::lcm(run_until_receive_high(start, rx_parent), result);
+
+        if (!is_state_reset()) {
+            std::cout << "2023 20 p2 Error: assumption that the modules state ";
+            std::cout << "is reset after a high was sent to rx_parent failed" << std::endl;
+        }
+    }
+
+    a.part2 = std::to_string(result);
 
     for (auto m : modules) delete m;
 
