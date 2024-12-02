@@ -45,7 +45,7 @@ aoch::Result solve_day01(aoch::Input& in) {
 
 
     // part 2
-    std::unordered_map<int, int> list_right_counter;
+    std::unordered_map<int, int> list_right_counter(list_right.size() * 3);
     for (auto n : list_right) list_right_counter[n]++;
 
     int similarity_score = 0;
