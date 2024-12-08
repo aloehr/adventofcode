@@ -9,7 +9,7 @@ set(SRC_FILES
     solutions/day03.cpp
     solutions/day04.cpp
     solutions/day05.cpp
-    # solutions/day06.cpp
+    solutions/day06.cpp
     solutions/day07.cpp
     solutions/day08.cpp
     # solutions/day09.cpp
