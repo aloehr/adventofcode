@@ -1,53 +1,39 @@
 #include <iostream>
 #include <string>
-#include <unordered_map>
+#include <unordered_set>
 
 #include <aoch/AOCSolutionTypes.hpp>
 
 
-int calc_tralhead_score_internal(size_t x, size_t y, const aoch::Input& map, std::unordered_map<size_t, int>& visited) {
-    const size_t hash = x << 32 | y;
-
+int calc_tralhead_scores_internal(size_t x, size_t y, const aoch::Input& map, std::unordered_set<size_t>& reached_peaks) {
     if (map[y][x] == '9') {
-        visited[hash] = 1;
+        reached_peaks.insert(x << 32 | y);
         return 1;
-    }
-
-    if (visited.count(hash)) {
-        return visited[hash];
     }
 
     int total_ways = 0;
 
     if (x > 0 && map[y][x] - map[y][x-1] == -1)
-        total_ways += calc_tralhead_score_internal(x-1, y, map, visited);
+        total_ways += calc_tralhead_scores_internal(x-1, y, map, reached_peaks);
 
     if (y > 0 && map[y][x] - map[y-1][x] == -1)
-        total_ways += calc_tralhead_score_internal(x, y-1, map, visited);
+        total_ways += calc_tralhead_scores_internal(x, y-1, map, reached_peaks);
 
     if (x < map[0].size() - 1 && map[y][x] - map[y][x+1] == -1)
-        total_ways += calc_tralhead_score_internal(x+1, y, map, visited);
+        total_ways += calc_tralhead_scores_internal(x+1, y, map, reached_peaks);
 
     if (y < map.size() - 1 && map[y][x] - map[y+1][x] == -1)
-        total_ways += calc_tralhead_score_internal(x, y+1, map, visited);
-
-    visited[hash] = total_ways;
+        total_ways += calc_tralhead_scores_internal(x, y+1, map, reached_peaks);
 
     return total_ways;
 }
 
-std::pair<int, int> calc_tralhead_score(size_t x, size_t y, const aoch::Input& map) {
-    std::unordered_map<size_t, int> visited;
+std::pair<int, int> calc_tralhead_scores(size_t x, size_t y, const aoch::Input& map) {
+    std::unordered_set<size_t> reached_peaks;
 
-    std::pair<int, int> res{};
-    res.second = calc_tralhead_score_internal(x, y, map, visited);
-
-    for (auto n : visited) {
-        int x = n.first >> 32;
-        int y = n.first;
-
-        if (map[y][x] == '9') res.first++;
-    }
+    std::pair<int, int> res;
+    res.second = calc_tralhead_scores_internal(x, y, map, reached_peaks);
+    res.first = reached_peaks.size();
 
     return res;
 }
@@ -62,7 +48,7 @@ aoch::Result solve_day10(aoch::Input& in) {
         for (size_t x = 0; x < in[0].size(); ++x) {
             if (in[y][x] != '0') continue;
 
-            const auto scores = calc_tralhead_score(x, y, in);
+            const auto scores = calc_tralhead_scores(x, y, in);
             trailhead_scores_sum += scores.first;
             trailhead_scores_sum2 += scores.second;
         }
