@@ -15,7 +15,6 @@ aoch::Result solve_day11(aoch::Input& in) {
 
     for (auto& t : tokens) stones[std::stol(t)]++;
 
-
     auto count_stones = [&stones] () {
         long long count = 0;
 
@@ -26,13 +25,22 @@ aoch::Result solve_day11(aoch::Input& in) {
         return count;
     };
 
+    auto digit_count = [] (long long n) {
+        int c = 1;
+
+        while (n > 9) {
+            c++;
+            n /= 10;
+        }
+
+        return c;
+    };
+
     std::unordered_map<long long, long long> next;
 
     int blink_count = 0;
 
     while (blink_count < 75) {
-
-        // std::cout << c  << " " << stones.size() << std::endl;
 
         for (const auto& kv : stones) {
             if (kv.first == 0) {
@@ -40,13 +48,24 @@ aoch::Result solve_day11(aoch::Input& in) {
                 continue;
             }
 
-            std::string x = std::to_string(kv.first);
-            if (x.size() % 2 == 0) {
-                auto a = x.substr(0, x.size() / 2);
-                auto b = x.substr(x.size() / 2);
+            int dc = digit_count(kv.first);
 
-                next[std::stol(a)] += kv.second;
-                next[std::stol(b)] += kv.second;
+            if (dc % 2 == 0) {
+                dc /= 2;
+
+                long long a = kv.first;
+                long long b = 0;
+                long long multi = 1;
+
+                while (dc) {
+                    b += multi * (a % 10);
+                    a /= 10;
+                    multi *= 10;
+                    dc--;
+                }
+
+                next[a] += kv.second;
+                next[b] += kv.second;
                 continue;
             }
 
